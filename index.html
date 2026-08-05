@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turopeo - Próximamente</title>
+
+<link rel="icon" type="image/x-icon" href="logo.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    /* ========== RESET & VARIABLES ========== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --green: #74c278;
+      --green-dark: #45b76c;
+      --coral: #f27363;
+      --orange: #f89b39;
+      --purple: #912791;
+      --yellow: #e6c131;
+      --text-dark: #383838;
+      --text-muted: #888;
+      --card-bg: rgba(255,255,255,0.96);
+      --bg-bone: #e9e4dd;
+      --gap: 12px;
+      --radius: 13px;
+      --font-title: 'Inter', sans-serif;
+      --font-body: 'Inter' , sans-serif ;
+      --transition-push: 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: var(--font-body);
+      background: var(--bg-bone);
+      color: var(--text-dark);
+    }
+
+    /* ========== BACKGROUND GRID ========== */
+    #bgGrid {
+      position: fixed;
+      inset: calc(var(--gap) * 2);
+      z-index: 0;
+    }
+
+    .cell {
+      position: absolute;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-sizing: border-box;
+      transition:
+        left var(--transition-push),
+        top var(--transition-push),
+        width var(--transition-push),
+        height var(--transition-push),
+        box-shadow 0.5s ease,
+        filter 0.5s ease;
+      will-change: auto;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.045);
+
+    }
+
+    .cell.active {
+      z-index: 5;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+      filter: brightness(1.05);
+      will-change: transform;
+    }
+
+    .cell video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    .cell.video {
+      box-shadow: 0 5px 18px rgba(20, 28, 24, 0.16);
+    }
+
+    /* ========== CENTER CARD ========== */
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: none;
+      padding: 20px;
+    }
+
+    .card {
+      pointer-events: auto;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(18px) saturate(3);
+      -webkit-backdrop-filter: blur(18px) saturate(3);
+      border: 1px solid rgba(255,255,255,0.45);
+      border-radius: 20px;
+      padding: 56px 40px 48px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow:
+        0 4px 24px rgba(0,0,0,0.06),
+        0 20px 60px rgba(0,0,0,0.08);
+      /* entrance animation */
+      opacity: 0;
+      transform: translateY(30px);
+      animation: cardIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+    }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card .logo {
+      width: 180px;
+      height: auto;
+      margin-bottom: 20px;
+    }
+
+    .card .subtitle {
+      font-weight: 400;
+      font-size: 13px;
+      color: var(--text-dark);
+      letter-spacing: 0.3px;
+      margin-bottom: 16px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.6s forwards;
+    }
+
+    .card h1 {
+      font-weight: 600;
+      font-family: var(--font-title);
+      font-size: 46px;
+      line-height: 0.9;
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+      color: var(--text-dark);
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.75s forwards;
+    }
+
+    .card .description {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 1.65;
+      color: #666;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.9s forwards;
+    }
+
+    .card .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dark);
+      text-decoration: none;
+      padding: 12px 4px;
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.3s ease, color 0.3s ease;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 1.05s forwards;
+    }
+
+    .card .cta:hover {
+      border-bottom-color: var(--orange);
+    }
+
+    .card .cta .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--orange);
+      color: var(--orange);
+      font-size: 14px;
+      transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .card .cta:hover .icon {
+      background: var(--orange);
+      color: #fff;
+    }
+
+    /* Active/clicked state — salmon/coral, wins over :hover via source order */
+    .card .cta.is-active {
+      border-bottom-color: var(--coral);
+    }
+
+    .card .cta.is-active .icon {
+      background: var(--coral);
+      border-color: var(--coral);
+    }
+
+    .card .cta-detail {
+      font-size: 11.5px;
+      line-height: 1.6;
+      color: var(--text-muted);
+      max-width: 420px;
+      min-height: 53px; /* espacio reservado desde el inicio: ~3 líneas a 11px/1.6 */
+      margin: 10px auto 0;
+      text-align: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease;
+    }
+
+    .card .cta-detail.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .card .coming-soon {
+      margin-top: 32px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      color: var(--text-muted);
+      opacity: 0;
+      animation: fadeUp 0.6s ease 1.2s forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 640px) {
+      .card { padding: 38px 26px 34px; border-radius: 16px; }
+      .card .logo { width: 140px; }
+      .card h1 { font-size: 26px; }
+      .card .description { font-size: 13px; }
+      .card .cta { font-size: 11px; }
+    }
+
+    /* ========== REDUCED MOTION ========== */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== BACKGROUND GRID (JS-generated) ========== -->
+  <div id="bgGrid"></div>
+
+  <!-- ========== CENTER CARD ========== -->
+  <div id="stage">
+    <div class="card">
+      <!-- Inline Turopeo logo SVG -->
+      <svg class="logo" viewBox="0 0 353.092 144.31" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Turopeo">
+        <g>
+          <path d="M296.87 98.61c-1.02 0-2.06-.1-3.09-.29-5.01-.94-9.25-3.99-11.93-8.6-2.9-4.98-3.53-11.19-1.7-16.61 2.59-7.65 9.04-12.59 16.42-12.59 3.07 0 6.17.89 8.97 2.58 6.18 3.72 9.54 11.2 8.56 19.04a.55.55 0 0 1-.54.48h-25.07c.03.13.07.26.11.39 1.12 3.82 4.53 6.49 8.3 6.49.79 0 1.58-.12 2.33-.37 1.62-.52 3.05-1.56 4.13-2.99.09-.12.23-.2.37-.21h.06c.13 0 .25.05.35.13l5.97 5.02c.18.16.24.41.16.63-.02.04-.04.09-.06.12-3.33 4.32-8.19 6.78-13.35 6.78Zm8-23.25c-1.3-3.38-4.62-5.85-7.99-5.85-.83 0-1.66.15-2.47.43-2.55.91-4.49 2.82-5.52 5.42h15.97Z" fill="#545554"/>
+          <path d="M334.8 98.61c-1.07 0-2.16-.1-3.24-.29-5.44-.97-9.98-4.17-12.78-9.02-2.87-4.97-3.43-10.88-1.53-16.2 2.72-7.65 9.49-12.59 17.24-12.59 3.22 0 6.47.89 9.41 2.57 7.63 4.37 11.07 13.96 8.17 22.79-2.5 7.61-9.44 12.73-17.27 12.73Zm.02-29.1c-.88 0-1.76.15-2.62.43-5.97 2.02-7.61 8.24-6.13 13.06 1.18 3.83 4.78 6.5 8.76 6.5.84 0 1.67-.12 2.47-.37 4.74-1.45 7.48-6.73 6.39-12.27-.8-4.05-4.78-7.35-8.88-7.35Z" fill="#545554"/>
+          <path d="M158.52 98.67c-8.89 0-16.12-7.15-16.12-15.94V62.3c0-.3.24-.55.55-.55h7.65c.3 0 .55.25.55.55v20.59c0 4.2 3.31 7.62 7.37 7.62s7.37-3.42 7.37-7.62V62.3c0-.3.24-.55.55-.55h7.67c.3 0 .55.25.55.55v20.43c0 .05 0 .1-.02.15-.08 8.72-7.28 15.79-16.12 15.79" fill="#545554"/>
+          <path d="M219.43 98.65c-2.54 0-4.94-.5-7.14-1.49-2.18-.98-4.13-2.36-5.81-4.1a19.4 19.4 0 0 1-3.93-6.04c-.95-2.28-1.43-4.77-1.43-7.41s.48-5.06 1.42-7.36c.94-2.29 2.26-4.34 3.94-6.08a18.6 18.6 0 0 1 5.8-4.1c2.2-.99 4.6-1.49 7.14-1.49s4.87.5 7.09 1.49c2.21.98 4.18 2.36 5.85 4.1s2.99 3.79 3.94 6.08c.95 2.31 1.42 4.79 1.42 7.36s-.48 5.12-1.43 7.41a19.6 19.6 0 0 1-3.93 6.04 18.4 18.4 0 0 1-5.85 4.1c-2.22.99-4.61 1.49-7.09 1.49Zm0-28.93c-1.3 0-2.53.26-3.68.78a9.9 9.9 0 0 0-3.02 2.11c-.84.87-1.52 1.93-2.03 3.15-.5 1.2-.76 2.49-.76 3.85s.25 2.65.76 3.85c.51 1.21 1.19 2.27 2.03 3.15.84.87 1.85 1.58 3.02 2.11 1.14.52 2.38.78 3.68.78s2.53-.26 3.68-.78a9.9 9.9 0 0 0 3.02-2.11c.84-.87 1.52-1.93 2.03-3.15.5-1.2.76-2.49.76-3.85s-.25-2.65-.76-3.85c-.51-1.21-1.19-2.27-2.03-3.15a9.8 9.8 0 0 0-3.01-2.11 8.8 8.8 0 0 0-3.68-.78Z" fill="#545554"/>
+          <path d="M241.08 110.44c-.3 0-.55-.25-.55-.55V80.63l-.02-.28c-.02-.24-.03-.49-.03-.73 0-2.58.48-5.06 1.42-7.36.94-2.29 2.26-4.34 3.94-6.08a18.6 18.6 0 0 1 5.8-4.1c2.2-.99 4.6-1.49 7.14-1.49s4.87.5 7.09 1.49c2.21.98 4.17 2.36 5.85 4.1 1.67 1.74 2.99 3.79 3.94 6.08.95 2.31 1.42 4.79 1.42 7.36s-.48 5.12-1.43 7.41a19.6 19.6 0 0 1-3.93 6.04 18.4 18.4 0 0 1-5.85 4.1c-2.22.99-4.61 1.49-7.09 1.49s-4.94-.5-7.14-1.49c-.53-.24-1.06-.51-1.62-.84l-.28 13.59c0 .3-.25.54-.55.54h-8.12Zm17.71-40.72c-1.3 0-2.53.26-3.68.78a9.9 9.9 0 0 0-3.02 2.11c-.84.87-1.52 1.93-2.03 3.15-.5 1.2-.76 2.49-.76 3.85s.25 2.65.76 3.85c.51 1.22 1.19 2.28 2.03 3.15s1.85 1.58 3.02 2.11c1.14.52 2.38.78 3.68.78s2.53-.26 3.68-.78a9.9 9.9 0 0 0 3.02-2.11c.84-.87 1.52-1.93 2.03-3.15.5-1.2.76-2.49.76-3.85s-.25-2.65-.76-3.85c-.51-1.21-1.19-2.27-2.03-3.15a9.8 9.8 0 0 0-3.01-2.11 8.8 8.8 0 0 0-3.68-.78Z" fill="#545554"/>
+          <path d="M138 89.63h-4.69c-4.07 0-7.37-3.43-7.37-7.63V69.41h11.44c.28 0 .51-.23.51-.51v-7.12c0-.28-.23-.51-.51-.51h-11.44V47.64c0-.3-.24-.55-.55-.55h-7.65c-.3 0-.55.25-.55.55v34.19c0 8.79 7.23 15.94 16.12 15.94H138c.28 0 .51-.23.51-.51v-7.12c0-.28-.23-.51-.51-.51" fill="#545554"/>
+          <path d="M195.94 60.86c-8.89 0-16.12 7.15-16.12 15.94v20.43c0 .3.24.55.55.55h7.65c.3 0 .55-.25.55-.55V76.64c0-4.2 3.31-7.62 7.37-7.62h4.69c.28 0 .51-.23.51-.51v-7.12c0-.28-.23-.51-.51-.51h-4.69Z" fill="#545554"/>
+          <path d="M48.5 62.22v26.16c0 3.15-2.55 5.7-5.7 5.7H16.7c-3.15 0-5.7-2.55-5.7-5.7V67.92c0-3.15 2.55-5.7 5.7-5.7z" fill="#912791"/>
+          <path d="M68.98 68.77h15.64c4.08 0 7.39 3.31 7.39 7.39v9.26c0 4.08-3.31 7.39-7.39 7.39h-8.25c-4.08 0-7.39-3.31-7.39-7.39z" fill="#74c278"/>
+          <path d="M74.27 10.47h28.47c2.92 0 5.29 2.37 5.29 5.29v28.68c0 2.92-2.37 5.29-5.29 5.29H68.98V15.76c0-2.92 2.37-5.29 5.29-5.29" fill="#f89b39"/>
+          <path d="M83.67 96.39H78.7l-2.15-.02c-6.18 0-11.2-5.19-11.2-11.58V65.67h17.37c.42 0 .77-.35.77-.77V54.08c0-.43-.34-.77-.77-.77H65.35v-20.7c0-.46-.37-.84-.83-.84H52.9a.83.83 0 0 0-.83.84v51.94c0 13.35 10.98 24.2 24.48 24.2h7.12c.42 0 .77-.35.77-.77V97.16c0-.43-.34-.77-.77-.77" fill="#545554"/>
+          <path d="M51.47 97.38h-10.5c-3.67 0-6.64 2.97-6.64 6.64v21.76c0 3.67 2.97 6.64 6.64 6.64h22.87c3.67 0 6.64-2.97 6.64-6.64v-13.94a28.28 28.28 0 0 1-19.01-14.47Z" fill="#45b76c"/>
+          <path fill="#fbd433" d="M78.61 144.31H62.35a5.12 5.12 0 0 1-5.12-5.12v-15.08a5.12 5.12 0 0 1 5.12-5.12h16.26a5.12 5.12 0 0 1 5.12 5.12v15.08a5.12 5.12 0 0 1-5.12 5.12"/>
+          <path d="M48.32 32.61c0-2.53 2.05-4.58 4.57-4.58h7.8V4.71c0-2.6-2.11-4.71-4.71-4.71H4.71C2.11 0 0 2.11 0 4.71v49.45c0 2.6 2.11 4.71 4.71 4.71h43.61V32.62Z" fill="#f27363"/>
+        </g>
+      </svg>
+
+      <p class="subtitle">Estamos construyendo algo nuevo</p>
+      <h1>Una plataforma.<br>Un mundo de posibilidades.</h1>
+      <p class="description">
+        Turopeo est&aacute; tomando forma: una plataforma B2B global
+        donde el conocimiento local y la tecnolog&iacute;a se combinan
+        para crear viajes verdaderamente incre&iacute;bles.
+      </p>
+      <a href="#" class="cta" id="ctaLink">
+        DESCUBR&Iacute; NUESTRO PUNTO DE PARTIDA
+        <span class="icon"></span>
+      </a>
+      <p class="cta-detail" id="ctaDetail">Creemos que los mejores viajes no nacen de f&oacute;rmulas cerradas, sino de piezas que pueden combinarse con libertad.</p>
+      <p class="coming-soon">PR&Oacute;XIMAMENTE</p>
+    </div>
+  </div>
+
+  <script>
+    /* ================================================================
+       TURopeo Interactive Drawer Grid
+       12 local videos rotating in 4 big, well-separated cells
+       ================================================================ */
+
+    /* Video rotation sets — each cell owns its own list + interval */
+    const VIDEO_SETS = [
+      ['01 Aueroras.mp4', 'greenland.mp4', 'faroe.mp4'],            // 0: aurora
+      ['denmark.mp4', 'denmark 2.mp4', '02 Bergen.mp4', 'Preikestolen.mp4'], // 1: nordic
+      ['shangai.mp4', 'China forbiden city.mp4'],                    // 2: asia
+      ['africa.mp4', 'africa ciudad.mp4', 'croacia.mp4'],            // 3: africa
+    ];
+
+    /* Base rotation interval (ms) per video cell — each cell ticks at
+       a different, slightly randomized cadence so nothing feels synced. */
+    const BASE_INTERVALS = [6000, 7000, 5000, 4000];
+    const JITTER = 500; // +/- ms of randomness added every cycle
+
+    const CFG = {
+      gap: 14,
+      growFrac: 0.42,   // how much of a track's base size it can gain on hover
+      growCap: 90,      // px cap on growth
+      minFrac: 0.32,    // a shrinking neighbor track never goes below this fraction of base
+    };
+
+    /* ================================================================
+       LAYOUT — 10×5 continuous coordinate grid (fractional col/row/
+       colSpan/rowSpan are allowed, e.g. 1.25, 3.75, 8.75 — that's how
+       everything below tiles exactly with zero leftover space).
+
+       All 4 videos are vertical/portrait, sized like the original
+       africa block (1.5 wide × 3 tall), each varied slightly by
+       decimals for visual variety. Each video sits in its own
+       dedicated column band, and those bands are separated by solid
+       "gap" columns — so no two videos ever share a column, or even
+       touch each other directly.
+
+       Every column band (video band or gap band) always accounts for
+       the FULL grid height (5): a video band = video + solid filler
+       for whatever rows the video doesn't cover; a gap band = solids
+       covering all 5 rows. Bands are laid edge-to-edge left to right
+       summing to the full 10 columns, so the grid is 100% covered —
+       no gaps, ever, at rest or while something is growing on hover.
+       ================================================================ */
+    const COLS = 10, ROWS = 5;
+
+    const DEFS = [
+      /* ─────────────────────────────
+         VIDEOS — nordic y asia corridos hacia los extremos
+         para que el cartel central no los tape.
+      ───────────────────────────── */
+      [0,    0, 'v', 0, 1.5,  3],       // aurora  — col 0–1.5
+      [2.25, 1, 'v', 1, 1.75, 2.75],    // nordic  — col 2.25–4   (antes 3–4.75)
+      [6.5,  0, 'v', 2, 1.5,  3.25],    // asia    — col 6.5–8    (antes 5.75–7.25)
+      [8.65, 2, 'v', 3, 1.35, 3],       // africa  — col 8.75–10
+
+      /* ─────────────────────────────
+         Gap aurora–nórdico — col 1.5–2.25
+      ───────────────────────────── */
+      [1.5,  0,    'c', '#f89b39', 0.75, 1.5],
+      [1.5,  1.5,  'c', '#912791', 0.75, 1.75],
+      [1.5,  3.25, 'c', '#f27363', 0.75, 1.75],
+
+      /* ─────────────────────────────
+         Aurora band leftover — col 0–1.5, row 3–5 (dos medias columnas)
+      ───────────────────────────── */
+      [0,    3, 'c', '#45b76c', 0.75, 2],
+      [0.75, 3, 'c', '#fbd433', 0.75, 2],
+
+      /* ─────────────────────────────
+         Nordic band leftover — col 2.25–4 (dos medias columnas)
+      ───────────────────────────── */
+      [2.25, 0,    'c', '#f27363', 0.875, 1],
+      [3.125, 0,   'c', '#74c278', 0.875, 1],
+      [2.25, 3.75, 'c', '#912791', 0.875, 1.25],
+      [3.125, 3.75, 'c', '#74c278', 0.875, 1.25],
+
+      /* ─────────────────────────────
+         Centro — col 4–6.5, dos columnas iguales (1.25 c/u)
+         apiladas sin huecos
+      ───────────────────────────── */
+      [4,    0,    'c', '#f27363', 1.25, 1.5],
+      [4,    1.5,  'c', '#912791', 1.25, 1.75],
+      [4,    3.25, 'c', '#fbd433', 1.25, 1.75],
+      [5.25, 0,    'c', '#f89b39', 1.25, 1.25],
+      [5.25, 1.25, 'c', '#74c278', 1.25, 1.75],
+      [5.25, 3,    'c', '#45b76c', 1.25, 2],
+
+      /* ─────────────────────────────
+         Asia band leftover — col 6.5–8 (dos medias columnas)
+      ───────────────────────────── */
+      [6.5,  3.25, 'c', '#f89b39', 0.75, 1.75],
+      [7.25, 3.25, 'c', '#f27363', 0.75, 1.75],
+
+      /* ─────────────────────────────
+         Gap asia–áfrica — col 8–8.75
+      ───────────────────────────── */
+      [8,    0,    'c', '#fbd433', 0.65, 2.25],
+      [8,    2.25, 'c', '#74c278', 0.65, 2.75],
+
+      /* ─────────────────────────────
+         Africa band leftover — col 8.75–10 (dos medias columnas)
+      ───────────────────────────── */
+      [8.65, 0, 'c', '#912791', 0.725, 2],
+      [9.375, 0, 'c', '#f89b39', 0.625, 2],
+    ];
+
+    /* ---- State ---- */
+    let cells = [];
+    let videoEls = [], videoCounters = [], videoSetIndex = [], videoTimers = [];
+    let hoveredCell = null;          // real mouse hover
+    let autoHovered = new Set();     // cells currently faking a hover
+    let autoHoverTimer = null;
+    let holdTimeouts = [];
+    const grid = document.getElementById('bgGrid');
+
+    /* ================================================================
+       BUILD — supports fractional colSpan/rowSpan (6th param)
+       ================================================================ */
+    function buildGrid() {
+      // clear any pending timers before rebuilding
+      videoTimers.forEach(t => clearTimeout(t));
+      videoTimers = [];
+      if (autoHoverTimer) clearTimeout(autoHoverTimer);
+      holdTimeouts.forEach(t => clearTimeout(t));
+      holdTimeouts = [];
+      autoHovered = new Set();
+
+      grid.innerHTML = '';
+      cells = [];
+      videoEls = [];
+      videoCounters = [];
+      videoSetIndex = [];
+      hoveredCell = null;
+
+      for (const d of DEFS) {
+        const [c, r, type, color, colSpan, rowSpan] = d;
+        const cs = colSpan || 1;
+        const rs = rowSpan || 1;
+        const el = document.createElement('div');
+        el.className = 'cell';
+
+        const cellObj = { el, r, c, cs, rs, hoverDirection: null };
+
+        if (type === 'v') {
+          el.classList.add('video');
+          el.style.backgroundColor = '#1a1a2e';
+          const vid = document.createElement('video');
+          vid.muted = true; vid.autoplay = true; vid.loop = true;
+          vid.playsInline = true; vid.preload = 'auto';
+          vid.src = VIDEO_SETS[color][0];
+          el.appendChild(vid);
+          vid.play().catch(() => {
+            document.addEventListener('pointerdown', () => vid.play(), { once: true });
+          });
+          videoEls.push(vid);
+          videoCounters.push(0);
+          videoSetIndex.push(color);
+        } else {
+          el.style.backgroundColor = color;
+        }
+
+        // Only the hovered cell grows — everything else stays put.
+        el.addEventListener('mouseenter', () => {
+          hoveredCell = cellObj;
+          cellObj.hoverDirection = pickRandomDirection(cellObj);
+          applyLayout();
+        });
+        el.addEventListener('mouseleave', () => {
+          if (hoveredCell === cellObj) {
+            hoveredCell = null;
+            applyLayout();
+          }
+        });
+
+        grid.appendChild(el);
+        cells.push(cellObj);
+      }
+
+      applyLayout();
+      startStaggeredRotation();
+      scheduleAutoHover();
+    }
+
+    /* ================================================================
+       STAGGERED, DYNAMIC VIDEO ROTATION
+       ================================================================ */
+    function startStaggeredRotation() {
+      videoEls.forEach((vid, i) => scheduleNextRotation(i));
+    }
+
+    function scheduleNextRotation(i) {
+      const base = BASE_INTERVALS[i % BASE_INTERVALS.length];
+      const delay = Math.max(2500, base + (Math.random() * JITTER * 2 - JITTER));
+      videoTimers[i] = setTimeout(() => {
+        rotateVideo(i);
+        scheduleNextRotation(i);
+      }, delay);
+    }
+
+    function rotateVideo(i) {
+      const vid = videoEls[i];
+      if (!vid) return;
+      const set = VIDEO_SETS[videoSetIndex[i]];
+      videoCounters[i] = (videoCounters[i] + 1) % set.length;
+      vid.style.opacity = '0';
+      setTimeout(() => {
+        vid.src = set[videoCounters[i]];
+        vid.play().catch(() => {});
+        vid.style.opacity = '1';
+      }, 180);
+    }
+
+    /* ================================================================
+       PER-CELL HOVER LAYOUT
+       A hovered cell grows in a RANDOM direction, chosen only among
+       directions that exist for its position (a corner cell can't
+       grow off the grid). Only the immediate touching neighbor(s) on
+       that edge shrink to compensate — their far edge stays fixed —
+       so the grid always tiles perfectly, real hover or fake hover,
+       one cell active or several at once.
+       ================================================================ */
+    function baseTrackSizes() {
+      const outer = CFG.gap * 2;
+      const W = window.innerWidth - outer * 2;
+      const H = window.innerHeight - outer * 2;
+      const gapX = (COLS - 1) * CFG.gap;
+      const gapY = (ROWS - 1) * CFG.gap;
+      return {
+        colBase: (W - gapX) / COLS,
+        rowBase: (H - gapY) / ROWS,
+      };
+    }
+
+    // Which directions actually exist for this cell, given the grid edges.
+    // Horizontal growth is disabled on purpose — everything only grows
+    // up/down, so the whole page reads like a vertical reels feed.
+    function candidateDirections(cell) {
+      const { r, rs } = cell;
+      const dirs = [];
+      if (r - 1 >= 0) dirs.push('up');
+      if (r + rs < ROWS) dirs.push('down');
+      return dirs;
+    }
+
+    function pickRandomDirection(cell) {
+      const dirs = candidateDirections(cell);
+      if (!dirs.length) return null;
+      return dirs[Math.floor(Math.random() * dirs.length)];
+    }
+
+    // Base pixel rect for a cell (no hover growth applied).
+    function baseRectOf(cell, colBase, rowBase) {
+      return {
+        x: cell.c * (colBase + CFG.gap),
+        y: cell.r * (rowBase + CFG.gap),
+        w: cell.cs * colBase + (cell.cs - 1) * CFG.gap,
+        h: cell.rs * rowBase + (cell.rs - 1) * CFG.gap,
+      };
+    }
+
+    // Only the cell(s) that actually share the edge being grown into —
+    // matched by grid coordinates, not by shared tracks — so a single
+    // block moving never drags its whole row/column with it.
+    function findTouchingNeighbors(cell, direction) {
+      return cells.filter(other => {
+        if (other === cell) return false;
+        if (direction === 'right') {
+          return other.c === cell.c + cell.cs &&
+                 other.r < cell.r + cell.rs && other.r + other.rs > cell.r;
+        }
+        if (direction === 'left') {
+          return other.c + other.cs === cell.c &&
+                 other.r < cell.r + cell.rs && other.r + other.rs > cell.r;
+        }
+        if (direction === 'down') {
+          return other.r === cell.r + cell.rs &&
+                 other.c < cell.c + cell.cs && other.c + other.cs > cell.c;
+        }
+        if (direction === 'up') {
+          return other.r + other.rs === cell.r &&
+                 other.c < cell.c + cell.cs && other.c + other.cs > cell.c;
+        }
+        return false;
+      });
+    }
+
+    // General adjacency/overlap test in grid coordinates (used to keep
+    // simultaneously fake-hovered cells from ever sitting next to each
+    // other, so their growth never fights over the same shared edge).
+    function rectsAdjacent(a, b) {
+      const eps = 0.001;
+      const aLeft = a.c - eps, aRight = a.c + a.cs + eps;
+      const aTop = a.r - eps, aBottom = a.r + a.rs + eps;
+      const bLeft = b.c, bRight = b.c + b.cs;
+      const bTop = b.r, bBottom = b.r + b.rs;
+      const xOverlap = aLeft < bRight && bLeft < aRight;
+      const yOverlap = aTop < bBottom && bTop < aBottom;
+      return xOverlap && yOverlap;
+    }
+
+    // Grows `cell` in `direction` within the given rects map, shrinking
+    // only its immediate touching neighbor(s) to compensate. Mutates
+    // `rects` in place. Safe to call for several independent cells in
+    // one applyLayout() pass as long as they aren't adjacent to each
+    // other (that's what rectsAdjacent guards against).
+    function growCellInRects(cell, direction, rects, colBase, rowBase) {
+      if (!direction) return;
+      const neighbors = findTouchingNeighbors(cell, direction);
+      if (!neighbors.length) return;
+
+      const horizontal = direction === 'left' || direction === 'right';
+      const base = horizontal ? colBase : rowBase;
+      let growAmt = Math.min(base * CFG.growFrac, CFG.growCap);
+
+      let maxAvail = Infinity;
+      for (const n of neighbors) {
+        const rect = rects.get(n);
+        const size = horizontal ? rect.w : rect.h;
+        maxAvail = Math.min(maxAvail, size - size * CFG.minFrac);
+      }
+      growAmt = Math.max(0, Math.min(growAmt, maxAvail));
+
+      const hRect = rects.get(cell);
+      if (direction === 'right') {
+        hRect.w += growAmt;
+        neighbors.forEach(n => { const r = rects.get(n); r.x += growAmt; r.w -= growAmt; });
+      } else if (direction === 'left') {
+        hRect.x -= growAmt; hRect.w += growAmt;
+        neighbors.forEach(n => { const r = rects.get(n); r.w -= growAmt; });
+      } else if (direction === 'down') {
+        hRect.h += growAmt;
+        neighbors.forEach(n => { const r = rects.get(n); r.y += growAmt; r.h -= growAmt; });
+      } else if (direction === 'up') {
+        hRect.y -= growAmt; hRect.h += growAmt;
+        neighbors.forEach(n => { const r = rects.get(n); r.h -= growAmt; });
+      }
+    }
+
+    function applyLayout() {
+      const { colBase, rowBase } = baseTrackSizes();
+
+      // Start everyone at their base rect.
+      const rects = new Map();
+      for (const cell of cells) rects.set(cell, baseRectOf(cell, colBase, rowBase));
+      for (const cell of cells) cell.el.classList.remove('active');
+
+      // Every cell currently "hovered" — real mouse hover plus any
+      // auto-hover picks — grows independently on top of the base grid.
+      const activeCells = [...autoHovered];
+      if (hoveredCell && !activeCells.includes(hoveredCell)) activeCells.push(hoveredCell);
+
+      for (const cell of activeCells) {
+        growCellInRects(cell, cell.hoverDirection, rects, colBase, rowBase);
+        cell.el.classList.add('active');
+      }
+
+      for (const cell of cells) {
+        const r = rects.get(cell);
+        cell.el.style.left = r.x + 'px';
+        cell.el.style.top = r.y + 'px';
+        cell.el.style.width = r.w + 'px';
+        cell.el.style.height = r.h + 'px';
+      }
+    }
+
+    /* ================================================================
+       RANDOM AUTO-HOVER
+       Every 2–3s, pick 2 or 3 cells (video or solid) that are not
+       currently active and don't touch each other or anything already
+       active, and fake a hover on them for a moment. Guarantees the
+       simultaneously-animated cells are never adjacent.
+       ================================================================ */
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function scheduleAutoHover() {
+      const delay = 2000 + Math.random() * 1000; // 2–3s
+      autoHoverTimer = setTimeout(() => {
+        triggerRandomAutoHover();
+        scheduleAutoHover();
+      }, delay);
+    }
+
+    function triggerRandomAutoHover() {
+      const activeNow = new Set(autoHovered);
+      if (hoveredCell) activeNow.add(hoveredCell);
+
+      const numToPick = 2 + Math.floor(Math.random() * 2); // 2 or 3
+      const candidates = shuffle(
+        cells.filter(c => !activeNow.has(c) && candidateDirections(c).length)
+      );
+      const picked = [];
+
+      for (const c of candidates) {
+        const clashesWithActive = [...activeNow].some(a => rectsAdjacent(c, a));
+        const clashesWithPicked = picked.some(p => rectsAdjacent(c, p));
+        if (!clashesWithActive && !clashesWithPicked) picked.push(c);
+        if (picked.length >= numToPick) break;
+      }
+
+      if (!picked.length) return;
+
+      picked.forEach(cell => {
+        cell.hoverDirection = pickRandomDirection(cell);
+        autoHovered.add(cell);
+      });
+      applyLayout();
+
+      const holdTime = 1300 + Math.random() * 400;
+      const t = setTimeout(() => {
+        picked.forEach(cell => autoHovered.delete(cell));
+        applyLayout();
+      }, holdTime);
+      holdTimeouts.push(t);
+    }
+
+    /* ================================================================
+       INIT
+       ================================================================ */
+    function init() {
+      buildGrid();
+
+      let rt;
+      window.addEventListener('resize', () => {
+        clearTimeout(rt);
+        rt = setTimeout(buildGrid, 250);
+      });
+
+      // CTA click reveal
+      const ctaLink = document.getElementById('ctaLink');
+      const ctaDetail = document.getElementById('ctaDetail');
+      ctaLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const active = ctaLink.classList.toggle('is-active');
+        ctaDetail.classList.toggle('show', active);
+      });
+    }
+
+    document.readyState === 'loading'
+      ? document.addEventListener('DOMContentLoaded', init)
+      : init();
+  </script>
+</body>
+</html>

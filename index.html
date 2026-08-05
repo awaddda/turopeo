@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Turopeo - Próximamente</title>
-
-<link rel="icon" type="image/x-icon" href="logo.ico">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
+  <link rel="icon" type="image/x-icon" href="logo.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     /* ========== RESET & VARIABLES ========== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -28,8 +26,9 @@
       --gap: 12px;
       --radius: 13px;
       --font-title: 'Inter', sans-serif;
-      --font-body: 'Inter' , sans-serif ;
-      --transition-push: 600ms cubic-bezier(0.22, 1, 0.36, 1);
+      --font-body: 'Inter', sans-serif;
+      /* ── AJUSTA LA VELOCIDAD DE LAS TRANSICIONES DE CELDAS ── */
+      --transition-push: 900ms cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     html, body {
@@ -57,11 +56,10 @@
         top var(--transition-push),
         width var(--transition-push),
         height var(--transition-push),
-        box-shadow 0.5s ease,
-        filter 0.5s ease;
+        box-shadow 0.8s ease,
+        filter 0.8s ease;
       will-change: auto;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.045);
-
     }
 
     .cell.active {
@@ -78,7 +76,8 @@
       height: 100%;
       object-fit: cover;
       pointer-events: none;
-      transition: opacity 0.18s ease;
+      /* ── AJUSTA LA VELOCIDAD DEL FUNDIDO DE VÍDEOS ── */
+      transition: opacity 0.3s ease;
     }
 
     .cell.video {
@@ -111,7 +110,6 @@
       box-shadow:
         0 4px 24px rgba(0,0,0,0.06),
         0 20px 60px rgba(0,0,0,0.08);
-      /* entrance animation */
       opacity: 0;
       transform: translateY(30px);
       animation: cardIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
@@ -198,7 +196,6 @@
       color: #fff;
     }
 
-    /* Active/clicked state — salmon/coral, wins over :hover via source order */
     .card .cta.is-active {
       border-bottom-color: var(--coral);
     }
@@ -213,7 +210,7 @@
       line-height: 1.6;
       color: var(--text-muted);
       max-width: 420px;
-      min-height: 53px; /* espacio reservado desde el inicio: ~3 líneas a 11px/1.6 */
+      min-height: 53px;
       margin: 10px auto 0;
       text-align: center;
       opacity: 0;
@@ -250,7 +247,6 @@
       .card .cta { font-size: 11px; }
     }
 
-    /* ========== REDUCED MOTION ========== */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -261,7 +257,7 @@
 </head>
 <body>
 
-  <!-- ========== BACKGROUND GRID (JS-generated) ========== -->
+  <!-- ========== BACKGROUND GRID ========== -->
   <div id="bgGrid"></div>
 
   <!-- ========== CENTER CARD ========== -->
@@ -288,143 +284,122 @@
       </svg>
 
       <p class="subtitle">Estamos construyendo algo nuevo</p>
-      <h1>Una plataforma.<br>Un mundo de posibilidades.</h1>
+      <h1>Una plataforma.<br />Un mundo de posibilidades.</h1>
       <p class="description">
-        Turopeo est&aacute; tomando forma: una plataforma B2B global
-        donde el conocimiento local y la tecnolog&iacute;a se combinan
-        para crear viajes verdaderamente incre&iacute;bles.
+        Turopeo está tomando forma: una plataforma B2B global
+        donde el conocimiento local y la tecnología se combinan
+        para crear viajes verdaderamente increíbles.
       </p>
       <a href="#" class="cta" id="ctaLink">
-        DESCUBR&Iacute; NUESTRO PUNTO DE PARTIDA
+        DESCUBRÍ NUESTRO PUNTO DE PARTIDA
         <span class="icon"></span>
       </a>
-      <p class="cta-detail" id="ctaDetail">Creemos que los mejores viajes no nacen de f&oacute;rmulas cerradas, sino de piezas que pueden combinarse con libertad.</p>
-      <p class="coming-soon">PR&Oacute;XIMAMENTE</p>
+      <p class="cta-detail" id="ctaDetail">Creemos que los mejores viajes no nacen de fórmulas cerradas, sino de piezas que pueden combinarse con libertad.</p>
+      <p class="coming-soon">PRÓXIMAMENTE</p>
     </div>
   </div>
 
   <script>
     /* ================================================================
        TURopeo Interactive Drawer Grid
-       12 local videos rotating in 4 big, well-separated cells
        ================================================================ */
 
-    /* Video rotation sets — each cell owns its own list + interval */
+    /* ─── CONFIGURACIÓN DE VELOCIDADES ───
+       Puedes ajustar estos valores para cambiar la rapidez:
+       - Transiciones de celdas: modifica --transition-push en CSS.
+       - Fundido de vídeos: modifica la transición opacity en .cell video.
+       - Espera entre auto‑hovers: 2000‑3000 ms (más abajo)
+       - Duración del auto‑hover: 1800‑2500 ms (más abajo)
+       - Rotación de vídeos: BASE_INTERVALS (más abajo)
+    ─────────────────────────────────────── */
+
+    /* Video rotation sets */
     const VIDEO_SETS = [
-      ['01 Aueroras.mp4', 'greenland.mp4', 'faroe.mp4'],            // 0: aurora
-      ['denmark.mp4', 'denmark 2.mp4', '02 Bergen.mp4', 'Preikestolen.mp4'], // 1: nordic
-      ['shangai.mp4', 'China forbiden city.mp4'],                    // 2: asia
-      ['africa.mp4', 'africa ciudad.mp4', 'croacia.mp4'],            // 3: africa
+      ['01 Aueroras.mp4', 'greenland.mp4', 'faroe.mp4'],
+      ['denmark.mp4', 'denmark 2.mp4', '02 Bergen.mp4', 'Preikestolen.mp4'],
+      ['shangai.mp4', 'China forbiden city.mp4'],
+      ['africa.mp4', 'africa ciudad.mp4', 'croacia.mp4'],
     ];
 
-    /* Base rotation interval (ms) per video cell — each cell ticks at
-       a different, slightly randomized cadence so nothing feels synced. */
+    /* Intervalos base entre cambios de vídeo (ms) */
     const BASE_INTERVALS = [6000, 7000, 5000, 4000];
-    const JITTER = 500; // +/- ms of randomness added every cycle
+    const JITTER = 500;
 
+    /* ─── MAPA DE COLORES (usando variables CSS) ─── */
+    const COLOR_NAMES = ['coral', 'green', 'purple', 'orange', 'yellow', 'green-dark'];
+    const colorMap = {
+      coral: 'var(--coral)',
+      green: 'var(--green)',
+      purple: 'var(--purple)',
+      orange: 'var(--orange)',
+      yellow: 'var(--yellow)',
+      'green-dark': 'var(--green-dark)'
+    };
+
+    /* Parámetros del grid (se ajustan para móvil) */
     const CFG = {
-      gap: 14,
-      growFrac: 0.42,   // how much of a track's base size it can gain on hover
-      growCap: 90,      // px cap on growth
-      minFrac: 0.32,    // a shrinking neighbor track never goes below this fraction of base
+      gap: 14,          // separación entre celdas (px)
+      growFrac: 0.42,   // fracción de crecimiento al hacer hover
+      growCap: 90,      // tope de crecimiento (px)
+      minFrac: 0.32,    // fracción mínima de una celda vecina al encogerse
     };
 
     /* ================================================================
-       LAYOUT — 10×5 continuous coordinate grid (fractional col/row/
-       colSpan/rowSpan are allowed, e.g. 1.25, 3.75, 8.75 — that's how
-       everything below tiles exactly with zero leftover space).
-
-       All 4 videos are vertical/portrait, sized like the original
-       africa block (1.5 wide × 3 tall), each varied slightly by
-       decimals for visual variety. Each video sits in its own
-       dedicated column band, and those bands are separated by solid
-       "gap" columns — so no two videos ever share a column, or even
-       touch each other directly.
-
-       Every column band (video band or gap band) always accounts for
-       the FULL grid height (5): a video band = video + solid filler
-       for whatever rows the video doesn't cover; a gap band = solids
-       covering all 5 rows. Bands are laid edge-to-edge left to right
-       summing to the full 10 columns, so the grid is 100% covered —
-       no gaps, ever, at rest or while something is growing on hover.
+       DEFINICIÓN DEL GRID (10 columnas × 5 filas)
+       Cada entrada: [col, row, tipo, color/índice, colSpan, rowSpan]
+       - tipo 'v': vídeo, color es el índice del set de vídeos
+       - tipo 'c': bloque sólido, color es el nombre simbólico
        ================================================================ */
-    const COLS = 10, ROWS = 5;
-
     const DEFS = [
-      /* ─────────────────────────────
-         VIDEOS — nordic y asia corridos hacia los extremos
-         para que el cartel central no los tape.
-      ───────────────────────────── */
-      [0,    0, 'v', 0, 1.5,  3],       // aurora  — col 0–1.5
-      [2.25, 1, 'v', 1, 1.75, 2.75],    // nordic  — col 2.25–4   (antes 3–4.75)
-      [6.5,  0, 'v', 2, 1.5,  3.25],    // asia    — col 6.5–8    (antes 5.75–7.25)
-      [8.65, 2, 'v', 3, 1.35, 3],       // africa  — col 8.75–10
-
-      /* ─────────────────────────────
-         Gap aurora–nórdico — col 1.5–2.25
-      ───────────────────────────── */
-      [1.5,  0,    'c', '#f89b39', 0.75, 1.5],
-      [1.5,  1.5,  'c', '#912791', 0.75, 1.75],
-      [1.5,  3.25, 'c', '#f27363', 0.75, 1.75],
-
-      /* ─────────────────────────────
-         Aurora band leftover — col 0–1.5, row 3–5 (dos medias columnas)
-      ───────────────────────────── */
-      [0,    3, 'c', '#45b76c', 0.75, 2],
-      [0.75, 3, 'c', '#fbd433', 0.75, 2],
-
-      /* ─────────────────────────────
-         Nordic band leftover — col 2.25–4 (dos medias columnas)
-      ───────────────────────────── */
-      [2.25, 0,    'c', '#f27363', 0.875, 1],
-      [3.125, 0,   'c', '#74c278', 0.875, 1],
-      [2.25, 3.75, 'c', '#912791', 0.875, 1.25],
-      [3.125, 3.75, 'c', '#74c278', 0.875, 1.25],
-
-      /* ─────────────────────────────
-         Centro — col 4–6.5, dos columnas iguales (1.25 c/u)
-         apiladas sin huecos
-      ───────────────────────────── */
-      [4,    0,    'c', '#f27363', 1.25, 1.5],
-      [4,    1.5,  'c', '#912791', 1.25, 1.75],
-      [4,    3.25, 'c', '#fbd433', 1.25, 1.75],
-      [5.25, 0,    'c', '#f89b39', 1.25, 1.25],
-      [5.25, 1.25, 'c', '#74c278', 1.25, 1.75],
-      [5.25, 3,    'c', '#45b76c', 1.25, 2],
-
-      /* ─────────────────────────────
-         Asia band leftover — col 6.5–8 (dos medias columnas)
-      ───────────────────────────── */
-      [6.5,  3.25, 'c', '#f89b39', 0.75, 1.75],
-      [7.25, 3.25, 'c', '#f27363', 0.75, 1.75],
-
-      /* ─────────────────────────────
-         Gap asia–áfrica — col 8–8.75
-      ───────────────────────────── */
-      [8,    0,    'c', '#fbd433', 0.65, 2.25],
-      [8,    2.25, 'c', '#74c278', 0.65, 2.75],
-
-      /* ─────────────────────────────
-         Africa band leftover — col 8.75–10 (dos medias columnas)
-      ───────────────────────────── */
-      [8.65, 0, 'c', '#912791', 0.725, 2],
-      [9.375, 0, 'c', '#f89b39', 0.625, 2],
+      // Vídeos
+      [0,    0, 'v', 0, 1.5,  3],
+      [2.25, 1, 'v', 1, 1.75, 2.75],
+      [6.5,  0, 'v', 2, 1.5,  3.25],
+      [8.65, 2, 'v', 3, 1.35, 3],
+      // Gap aurora–nórdico
+      [1.5,  0,    'c', 'orange', 0.75, 1.5],
+      [1.5,  1.5,  'c', 'purple', 0.75, 1.75],
+      [1.5,  3.25, 'c', 'coral', 0.75, 1.75],
+      // Aurora band leftover
+      [0,    3, 'c', 'green-dark', 0.75, 2],
+      [0.75, 3, 'c', 'yellow', 0.75, 2],
+      // Nordic band leftover
+      [2.25, 0,    'c', 'coral', 0.875, 1],
+      [3.125, 0,   'c', 'green', 0.875, 1],
+      [2.25, 3.75, 'c', 'purple', 0.875, 1.25],
+      [3.125, 3.75, 'c', 'green', 0.875, 1.25],
+      // Centro
+      [4,    0,    'c', 'coral', 1.25, 1.5],
+      [4,    1.5,  'c', 'purple', 1.25, 1.75],
+      [4,    3.25, 'c', 'yellow', 1.25, 1.75],
+      [5.25, 0,    'c', 'orange', 1.25, 1.25],
+      [5.25, 1.25, 'c', 'green', 1.25, 1.75],
+      [5.25, 3,    'c', 'green-dark', 1.25, 2],
+      // Asia band leftover
+      [6.5,  3.25, 'c', 'orange', 0.75, 1.75],
+      [7.25, 3.25, 'c', 'coral', 0.75, 1.75],
+      // Gap asia–áfrica
+      [8,    0,    'c', 'yellow', 0.65, 2.25],
+      [8,    2.25, 'c', 'green', 0.65, 2.75],
+      // Africa band leftover
+      [8.65, 0, 'c', 'purple', 0.725, 2],
+      [9.375, 0, 'c', 'orange', 0.625, 2],
     ];
 
     /* ---- State ---- */
     let cells = [];
     let videoEls = [], videoCounters = [], videoSetIndex = [], videoTimers = [];
-    let hoveredCell = null;          // real mouse hover
-    let autoHovered = new Set();     // cells currently faking a hover
+    let hoveredCell = null;
+    let autoHovered = new Set();
     let autoHoverTimer = null;
     let holdTimeouts = [];
     const grid = document.getElementById('bgGrid');
 
     /* ================================================================
-       BUILD — supports fractional colSpan/rowSpan (6th param)
+       BUILD
        ================================================================ */
     function buildGrid() {
-      // clear any pending timers before rebuilding
+      // Limpiar temporizadores
       videoTimers.forEach(t => clearTimeout(t));
       videoTimers = [];
       if (autoHoverTimer) clearTimeout(autoHoverTimer);
@@ -439,14 +414,20 @@
       videoSetIndex = [];
       hoveredCell = null;
 
+      // Ajustar parámetros para móvil
+      const isMobile = window.innerWidth < 768;
+      CFG.gap = isMobile ? 6 : 14;
+      CFG.growFrac = isMobile ? 0.30 : 0.42;
+      CFG.growCap = isMobile ? 50 : 90;
+
       for (const d of DEFS) {
-        const [c, r, type, color, colSpan, rowSpan] = d;
+        const [c, r, type, colorOrIdx, colSpan, rowSpan] = d;
         const cs = colSpan || 1;
         const rs = rowSpan || 1;
         const el = document.createElement('div');
         el.className = 'cell';
 
-        const cellObj = { el, r, c, cs, rs, hoverDirection: null };
+        const cellObj = { el, r, c, cs, rs, hoverDirection: null, colorName: null };
 
         if (type === 'v') {
           el.classList.add('video');
@@ -454,19 +435,21 @@
           const vid = document.createElement('video');
           vid.muted = true; vid.autoplay = true; vid.loop = true;
           vid.playsInline = true; vid.preload = 'auto';
-          vid.src = VIDEO_SETS[color][0];
+          vid.src = VIDEO_SETS[colorOrIdx][0];
           el.appendChild(vid);
           vid.play().catch(() => {
             document.addEventListener('pointerdown', () => vid.play(), { once: true });
           });
           videoEls.push(vid);
           videoCounters.push(0);
-          videoSetIndex.push(color);
+          videoSetIndex.push(colorOrIdx);
         } else {
-          el.style.backgroundColor = color;
+          // Bloque sólido: guardamos el nombre simbólico
+          cellObj.colorName = colorOrIdx;
+          el.style.backgroundColor = colorMap[colorOrIdx] || colorOrIdx;
         }
 
-        // Only the hovered cell grows — everything else stays put.
+        // Eventos de hover
         el.addEventListener('mouseenter', () => {
           hoveredCell = cellObj;
           cellObj.hoverDirection = pickRandomDirection(cellObj);
@@ -483,13 +466,67 @@
         cells.push(cellObj);
       }
 
+      // Asegurar que no haya bloques adyacentes del mismo color
+      ensureNoAdjacentSameColor();
+
       applyLayout();
       startStaggeredRotation();
       scheduleAutoHover();
     }
 
     /* ================================================================
-       STAGGERED, DYNAMIC VIDEO ROTATION
+       VERIFICACIÓN DE COLORES ADYACENTES
+       ================================================================ */
+    function ensureNoAdjacentSameColor() {
+      // Solo nos interesan las celdas de tipo sólido (con colorName)
+      const solidCells = cells.filter(c => c.colorName);
+      let changed = true;
+      // Iteramos hasta que no haya más cambios
+      while (changed) {
+        changed = false;
+        for (const cell of solidCells) {
+          const neighbors = findTouchingNeighborsAllDirections(cell);
+          const neighborColors = new Set(neighbors.map(n => n.colorName).filter(Boolean));
+          if (neighborColors.has(cell.colorName)) {
+            // Buscar un color que no esté entre los vecinos
+            const available = COLOR_NAMES.filter(c => !neighborColors.has(c));
+            if (available.length) {
+              const newColor = available[Math.floor(Math.random() * available.length)];
+              cell.colorName = newColor;
+              cell.el.style.backgroundColor = colorMap[newColor];
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+
+    function findTouchingNeighborsAllDirections(cell) {
+      const result = [];
+      for (const other of cells) {
+        if (other === cell) continue;
+        // Verificar si comparten borde (arriba, abajo, izquierda, derecha)
+        const eps = 0.001;
+        // Para que sean adyacentes, deben estar alineados en una dimensión y tocarse en la otra
+        const xOverlap = other.c < cell.c + cell.cs + eps && other.c + other.cs > cell.c - eps;
+        const yOverlap = other.r < cell.r + cell.rs + eps && other.r + other.rs > cell.r - eps;
+        // Si no hay solapamiento en alguna dimensión, pueden ser adyacentes si están justo al lado
+        const touchesLeft = other.c + other.cs <= cell.c + eps && other.c + other.cs >= cell.c - eps;
+        const touchesRight = other.c >= cell.c + cell.cs - eps && other.c <= cell.c + cell.cs + eps;
+        const touchesTop = other.r + other.rs <= cell.r + eps && other.r + other.rs >= cell.r - eps;
+        const touchesBottom = other.r >= cell.r + cell.rs - eps && other.r <= cell.r + cell.rs + eps;
+
+        const horizontalTouch = (touchesLeft || touchesRight) && yOverlap;
+        const verticalTouch = (touchesTop || touchesBottom) && xOverlap;
+        if (horizontalTouch || verticalTouch) {
+          result.push(other);
+        }
+      }
+      return result;
+    }
+
+    /* ================================================================
+       ROTACIÓN DE VÍDEOS (con fundido más lento)
        ================================================================ */
     function startStaggeredRotation() {
       videoEls.forEach((vid, i) => scheduleNextRotation(i));
@@ -514,38 +551,29 @@
         vid.src = set[videoCounters[i]];
         vid.play().catch(() => {});
         vid.style.opacity = '1';
-      }, 180);
+      }, 300); // 300ms para el fundido (ajustable)
     }
 
     /* ================================================================
-       PER-CELL HOVER LAYOUT
-       A hovered cell grows in a RANDOM direction, chosen only among
-       directions that exist for its position (a corner cell can't
-       grow off the grid). Only the immediate touching neighbor(s) on
-       that edge shrink to compensate — their far edge stays fixed —
-       so the grid always tiles perfectly, real hover or fake hover,
-       one cell active or several at once.
+       LAYOUT (crecimiento en una dirección)
        ================================================================ */
     function baseTrackSizes() {
       const outer = CFG.gap * 2;
       const W = window.innerWidth - outer * 2;
       const H = window.innerHeight - outer * 2;
-      const gapX = (COLS - 1) * CFG.gap;
-      const gapY = (ROWS - 1) * CFG.gap;
+      const gapX = (10 - 1) * CFG.gap;
+      const gapY = (5 - 1) * CFG.gap;
       return {
-        colBase: (W - gapX) / COLS,
-        rowBase: (H - gapY) / ROWS,
+        colBase: (W - gapX) / 10,
+        rowBase: (H - gapY) / 5,
       };
     }
 
-    // Which directions actually exist for this cell, given the grid edges.
-    // Horizontal growth is disabled on purpose — everything only grows
-    // up/down, so the whole page reads like a vertical reels feed.
     function candidateDirections(cell) {
       const { r, rs } = cell;
       const dirs = [];
       if (r - 1 >= 0) dirs.push('up');
-      if (r + rs < ROWS) dirs.push('down');
+      if (r + rs < 5) dirs.push('down');
       return dirs;
     }
 
@@ -555,7 +583,6 @@
       return dirs[Math.floor(Math.random() * dirs.length)];
     }
 
-    // Base pixel rect for a cell (no hover growth applied).
     function baseRectOf(cell, colBase, rowBase) {
       return {
         x: cell.c * (colBase + CFG.gap),
@@ -565,9 +592,6 @@
       };
     }
 
-    // Only the cell(s) that actually share the edge being grown into —
-    // matched by grid coordinates, not by shared tracks — so a single
-    // block moving never drags its whole row/column with it.
     function findTouchingNeighbors(cell, direction) {
       return cells.filter(other => {
         if (other === cell) return false;
@@ -591,9 +615,6 @@
       });
     }
 
-    // General adjacency/overlap test in grid coordinates (used to keep
-    // simultaneously fake-hovered cells from ever sitting next to each
-    // other, so their growth never fights over the same shared edge).
     function rectsAdjacent(a, b) {
       const eps = 0.001;
       const aLeft = a.c - eps, aRight = a.c + a.cs + eps;
@@ -605,11 +626,6 @@
       return xOverlap && yOverlap;
     }
 
-    // Grows `cell` in `direction` within the given rects map, shrinking
-    // only its immediate touching neighbor(s) to compensate. Mutates
-    // `rects` in place. Safe to call for several independent cells in
-    // one applyLayout() pass as long as they aren't adjacent to each
-    // other (that's what rectsAdjacent guards against).
     function growCellInRects(cell, direction, rects, colBase, rowBase) {
       if (!direction) return;
       const neighbors = findTouchingNeighbors(cell, direction);
@@ -646,13 +662,10 @@
     function applyLayout() {
       const { colBase, rowBase } = baseTrackSizes();
 
-      // Start everyone at their base rect.
       const rects = new Map();
       for (const cell of cells) rects.set(cell, baseRectOf(cell, colBase, rowBase));
       for (const cell of cells) cell.el.classList.remove('active');
 
-      // Every cell currently "hovered" — real mouse hover plus any
-      // auto-hover picks — grows independently on top of the base grid.
       const activeCells = [...autoHovered];
       if (hoveredCell && !activeCells.includes(hoveredCell)) activeCells.push(hoveredCell);
 
@@ -671,11 +684,7 @@
     }
 
     /* ================================================================
-       RANDOM AUTO-HOVER
-       Every 2–3s, pick 2 or 3 cells (video or solid) that are not
-       currently active and don't touch each other or anything already
-       active, and fake a hover on them for a moment. Guarantees the
-       simultaneously-animated cells are never adjacent.
+       AUTO‑HOVER (más lento)
        ================================================================ */
     function shuffle(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
@@ -686,7 +695,8 @@
     }
 
     function scheduleAutoHover() {
-      const delay = 2000 + Math.random() * 1000; // 2–3s
+      // ── AJUSTA AQUÍ LA ESPERA ENTRE AUTO‑HOVERS (ms) ──
+      const delay = 2000 + Math.random() * 1000; // 2‑3s
       autoHoverTimer = setTimeout(() => {
         triggerRandomAutoHover();
         scheduleAutoHover();
@@ -697,7 +707,7 @@
       const activeNow = new Set(autoHovered);
       if (hoveredCell) activeNow.add(hoveredCell);
 
-      const numToPick = 2 + Math.floor(Math.random() * 2); // 2 or 3
+      const numToPick = 2 + Math.floor(Math.random() * 2);
       const candidates = shuffle(
         cells.filter(c => !activeNow.has(c) && candidateDirections(c).length)
       );
@@ -718,7 +728,8 @@
       });
       applyLayout();
 
-      const holdTime = 1300 + Math.random() * 400;
+      // ── AJUSTA AQUÍ LA DURACIÓN DEL AUTO‑HOVER (ms) ──
+      const holdTime = 1800 + Math.random() * 700; // 1.8‑2.5s
       const t = setTimeout(() => {
         picked.forEach(cell => autoHovered.delete(cell));
         applyLayout();

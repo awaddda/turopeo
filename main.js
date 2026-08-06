@@ -14,7 +14,7 @@
 
     /* Video rotation sets */
     const VIDEO_SETS = [
-      ['01 Aueroras.mp4', 'greenland.mp4', 'faroe.mp4'],
+      ['wix:video://v1/d1ff0b_966b8e6c8ed345b2a97f4b2aa8c20bb5/01%20Aueroras.mp4#posterUri=d1ff0b_966b8e6c8ed345b2a97f4b2aa8c20bb5f001.jpg&posterWidth=1080&posterHeight=1920', 'greenland.mp4', 'faroe.mp4'],
       ['denmark.mp4', 'denmark 2.mp4', '02 Bergen.mp4', 'Preikestolen.mp4'],
       ['shangai.mp4', 'China forbiden city.mp4'],
       ['africa.mp4', 'africa ciudad.mp4', 'croacia.mp4'],

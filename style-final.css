@@ -49,6 +49,16 @@
        (vw / dvh), que SIEMPRE se calculan contra la pantalla real sin
        importar qué ancestro tenga transform. Y top/left:0 con !important
        para anclarlo arriba a la izquierda pase lo que pase. */
+    /* 👇 FIX: Wix inserta esta capa automáticamente en el DOM de toda página,
+       DESPUÉS de que tu código carga. Nos tapaba el fondo y nos robaba los
+       clics/hover. pointer-events:none deja pasar el mouse "a través" de
+       ella, y con eso alcanza (no hace falta z-index para el tapado visual,
+       porque colorUnderlay pinta detrás del contenido normal de la página,
+       pero SÍ hacía falta esto para que no bloquee el cursor). */
+    [data-testid="colorUnderlay"] {
+      pointer-events: none !important;
+    }
+
     #bgGrid {
       position: absolute !important;
       top: 0 !important;
@@ -57,7 +67,7 @@
       height: 100dvh !important;
       padding: calc(var(--gap) * 2);
       box-sizing: border-box;
-      z-index: 0;
+      z-index: 100002 !important;
     }
 
     .cell {
@@ -109,7 +119,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 10;
+      z-index: 100003 !important;
       pointer-events: none;
       padding: 20px;
       box-sizing: border-box;

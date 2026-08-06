@@ -454,6 +454,16 @@ function triggerRandomAutoHover() {
    INIT
    ================================================================ */
 function init() {
+  // 👇 FIX: Wix suele envolver el contenido inyectado en contenedores propios
+  // que tienen transform/filter/will-change aplicado. Eso rompe position:fixed
+  // (el elemento queda "encerrado" dentro de ese contenedor en vez de cubrir
+  // toda la pantalla). Solución: mover #bgGrid y #stage directo a <body>,
+  // al nivel más alto del DOM, para evitar cualquier ancestro problemático.
+  const bg = document.getElementById('bgGrid');
+  const stage = document.getElementById('stage');
+  if (bg && bg.parentElement !== document.body) document.body.appendChild(bg);
+  if (stage && stage.parentElement !== document.body) document.body.appendChild(stage);
+
   buildGrid();
 
   // 👇 FIX: reintento de seguridad. Si en Wix el div #bgGrid todavía no

@@ -1,4 +1,3 @@
-
 /* ================================================================
    TURopeo Interactive Drawer Grid
    ================================================================ */
@@ -94,12 +93,22 @@ let hoveredCell = null;
 let autoHovered = new Set();
 let autoHoverTimer = null;
 let holdTimeouts = [];
-const grid = document.getElementById('bgGrid');
 
 /* ================================================================
    BUILD
    ================================================================ */
 function buildGrid() {
+  // 👇 FIX: buscamos #bgGrid recién acá, cada vez que se llama a buildGrid(),
+  // en vez de guardarlo una sola vez en una variable global al cargar el script.
+  // Si el script se ejecuta antes de que el div exista en el DOM (algo común
+  // cuando Wix inyecta el código dinámicamente), esto evita que todo el script
+  // se rompa silenciosamente en "grid.innerHTML = ''".
+  const grid = document.getElementById('bgGrid');
+  if (!grid) {
+    console.error('[TURopeo] No se encontró #bgGrid en el DOM. Reintentando...');
+    return;
+  }
+
   // Limpiar temporizadores
   videoTimers.forEach(t => clearTimeout(t));
   videoTimers = [];
@@ -361,6 +370,9 @@ function growCellInRects(cell, direction, rects, colBase, rowBase) {
 }
 
 function applyLayout() {
+  const grid = document.getElementById('bgGrid');
+  if (!grid) return;
+
   const { colBase, rowBase } = baseTrackSizes();
 
   const rects = new Map();
@@ -442,10 +454,15 @@ function triggerRandomAutoHover() {
    INIT
    ================================================================ */
 function init() {
-  console.log("ANTES");
   buildGrid();
-  console.log("ENTRÓ A BUILDGRID");
-  console.log("DESPUÉS");
+
+  // 👇 FIX: reintento de seguridad. Si en Wix el div #bgGrid todavía no
+  // estaba en el DOM cuando corrió init(), reintentamos una vez a los 300ms
+  // y otra vez a los 1000ms por si el contenedor tarda más en montarse.
+  if (!document.getElementById('bgGrid')) {
+    setTimeout(buildGrid, 300);
+    setTimeout(buildGrid, 1000);
+  }
 
   let rt;
   window.addEventListener('resize', () => {
@@ -456,11 +473,13 @@ function init() {
   // CTA click reveal
   const ctaLink = document.getElementById('ctaLink');
   const ctaDetail = document.getElementById('ctaDetail');
-  ctaLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    const active = ctaLink.classList.toggle('is-active');
-    ctaDetail.classList.toggle('show', active);
-  });
+  if (ctaLink && ctaDetail) {
+    ctaLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const active = ctaLink.classList.toggle('is-active');
+      ctaDetail.classList.toggle('show', active);
+    });
+  }
 }
 
 document.readyState === 'loading'

@@ -26,20 +26,37 @@
       --transition-push: 900ms cubic-bezier(0.22, 1, 0.36, 1);
     }
 
+    /* 👇 FIX: !important para ganarle a los estilos propios de Wix que
+       podrían estar pisando esto (Wix inyecta su propio CSS en html/body). */
     html,
     body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
+      width: 100% !important;
+      height: 100% !important;
+      overflow: hidden !important;
       font-family: var(--font-body);
       background: var(--bg-bone);
       color: var(--text-dark);
     }
 
-    /* ========== BACKGROUND GRID ========== */
+    /* ========== BACKGROUND GRID ==========
+       👇 FIX: Wix envuelve el contenido inyectado en contenedores propios
+       que suelen tener transform/filter/will-change aplicado. Eso hace que
+       "position: fixed" deje de calcularse respecto a la pantalla y pase a
+       calcularse respecto a ese contenedor (que puede tener tamaño 0 o
+       estar recortado) — el fondo queda "enterrado" en vez de cubrir todo.
+
+       Solución: usar position: absolute + tamaño en unidades de viewport
+       (vw / dvh), que SIEMPRE se calculan contra la pantalla real sin
+       importar qué ancestro tenga transform. Y top/left:0 con !important
+       para anclarlo arriba a la izquierda pase lo que pase. */
     #bgGrid {
-      position: fixed;
-      inset: calc(var(--gap) * 2);
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      padding: calc(var(--gap) * 2);
+      box-sizing: border-box;
       z-index: 0;
     }
 
@@ -81,16 +98,21 @@
       box-shadow: 0 5px 18px rgba(20, 28, 24, 0.16);
     }
 
-    /* ========== CENTER CARD ========== */
+    /* ========== CENTER CARD ==========
+       👇 FIX: mismo criterio que #bgGrid, absolute + vw/dvh en vez de fixed + inset */
     #stage {
-      position: fixed;
-      inset: 0;
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 10;
       pointer-events: none;
       padding: 20px;
+      box-sizing: border-box;
     }
 
     .card {

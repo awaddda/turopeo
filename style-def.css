@@ -61,11 +61,10 @@
 
     #bgGrid {
       position: absolute !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100vw !important;
-      height: 100dvh !important;
-      padding: calc(var(--gap) * 2);
+      top: calc(var(--gap) * 2) !important;
+      left: calc(var(--gap) * 2) !important;
+      width: calc(100vw - var(--gap) * 4) !important;
+      height: calc(100dvh - var(--gap) * 4) !important;
       box-sizing: border-box;
       z-index: 100002 !important;
     }

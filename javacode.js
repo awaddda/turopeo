@@ -14,7 +14,7 @@
 /* Video rotation sets */
 const VIDEO_SETS = [
   ['https://video.wixstatic.com/video/d1ff0b_966b8e6c8ed345b2a97f4b2aa8c20bb5/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_020fed668c0d40e49fdfd4c87ea077e4/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_82342e131dd54081a678e2e954f726ab/1080p/mp4/file.mp4'],
-  ['https://video.wixstatic.com/video/d1ff0b_e784a2dda70f41959d37a98aedb9ce82/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_020fed668c0d40e49fdfd4c87ea077e4/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_18dc1595c8ca451aa2ff609a854e40d1/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_5204f0e66ce9409da0c08061c0d32036/1080p/mp4/file.mp4'],
+  ['https://video.wixstatic.com/video/d1ff0b_e784a2dda70f41959d37a98aedb9ce82/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_18dc1595c8ca451aa2ff609a854e40d1/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_5204f0e66ce9409da0c08061c0d32036/1080p/mp4/file.mp4'],
   ['https://video.wixstatic.com/video/d1ff0b_816e8704562549eea74cb85806eb79ee/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_ca1ad36f2d10410eb3cc4a0a142453e3/1080p/mp4/file.mp4'],
   ['https://video.wixstatic.com/video/d1ff0b_4f776fb25ce44fae85210dd36698074a/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_a0e9ad4e5d1448c8b74232e290c4fd26/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_edbab392f21748f79d081c186c4919ba/1080p/mp4/file.mp4'],
 ];

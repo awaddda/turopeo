@@ -21,6 +21,8 @@ const VIDEO_SETS = [
 
 /* Intervalos base entre cambios de vídeo (ms) */
 const BASE_INTERVALS = [6000, 7000, 5000, 4000];
+/* En móvil rotamos un poco más lento para cuidar datos/batería */
+const BASE_INTERVALS_MOBILE = [8000, 9000, 7000, 6000];
 const JITTER = 500;
 
 /* ─── MAPA DE COLORES (usando variables CSS) ─── */
@@ -34,6 +36,9 @@ const colorMap = {
   'green-dark': 'var(--green-dark)'
 };
 
+/* Punto de corte para el layout móvil */
+const MOBILE_BREAKPOINT = 768;
+
 /* Parámetros del grid (se ajustan para móvil) */
 const CFG = {
   gap: 14,          // separación entre celdas (px)
@@ -43,11 +48,12 @@ const CFG = {
 };
 
 /* ================================================================
-   DEFINICIÓN DEL GRID (10 columnas × 5 filas)
+   DEFINICIÓN DEL GRID — ESCRITORIO (10 columnas × 5 filas)
    Cada entrada: [col, row, tipo, color/índice, colSpan, rowSpan]
    - tipo 'v': vídeo, color es el índice del set de vídeos
    - tipo 'c': bloque sólido, color es el nombre simbólico
    ================================================================ */
+const DESKTOP_GRID = { cols: 10, rows: 5 };
 const DEFS = [
   // Vídeos
   [0, 0, 'v', 0, 1.5, 3],
@@ -86,6 +92,34 @@ const DEFS = [
   [9.275, 0, 'c', 'orange', 0.725, 1.8],
 ];
 
+/* ================================================================
+   DEFINICIÓN DEL GRID — MÓVIL (4 columnas × 16 filas)
+   Layout apilado en vertical: cada vídeo ocupa el ancho completo,
+   con una franja de dos bloques de color entre cada uno. Pensado
+   para pantallas altas y angostas (retrato), evitando celdas
+   diminutas o ilegibles como pasaría si sólo achicáramos el grid
+   de escritorio.
+   ================================================================ */
+const MOBILE_GRID = { cols: 4, rows: 16 };
+const MOBILE_DEFS = [
+  // Aurora
+  [0, 0, 'v', 0, 4, 3],
+  [0, 3, 'c', 'orange', 2, 1],
+  [2, 3, 'c', 'purple', 2, 1],
+  // Nórdico
+  [0, 4, 'v', 1, 4, 3],
+  [0, 7, 'c', 'yellow', 2, 1],
+  [2, 7, 'c', 'coral', 2, 1],
+  // Asia (Shanghai)
+  [0, 8, 'v', 2, 4, 3],
+  [0, 11, 'c', 'green', 2, 1],
+  [2, 11, 'c', 'orange', 2, 1],
+  // África
+  [0, 12, 'v', 3, 4, 3],
+  [0, 15, 'c', 'purple', 2, 1],
+  [2, 15, 'c', 'green-dark', 2, 1],
+];
+
 /* ---- State ---- */
 let cells = [];
 let videoEls = [], videoCounters = [], videoSetIndex = [], videoTimers = [];
@@ -93,6 +127,8 @@ let hoveredCell = null;
 let autoHovered = new Set();
 let autoHoverTimer = null;
 let holdTimeouts = [];
+let isMobile = false;
+let GRID = DESKTOP_GRID;
 
 /* ================================================================
    BUILD
@@ -124,13 +160,16 @@ function buildGrid() {
   videoSetIndex = [];
   hoveredCell = null;
 
-  // Ajustar parámetros para móvil
-  const isMobile = window.innerWidth < 768;
+  // Ajustar parámetros y layout para móvil
+  isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+  GRID = isMobile ? MOBILE_GRID : DESKTOP_GRID;
+  const activeDefs = isMobile ? MOBILE_DEFS : DEFS;
+
   CFG.gap = isMobile ? 6 : 14;
   CFG.growFrac = isMobile ? 0.30 : 0.42;
   CFG.growCap = isMobile ? 50 : 90;
 
-  for (const d of DEFS) {
+  for (const d of activeDefs) {
     const [c, r, type, colorOrIdx, colSpan, rowSpan] = d;
     const cs = colSpan || 1;
     const rs = rowSpan || 1;
@@ -144,7 +183,9 @@ function buildGrid() {
       el.style.backgroundColor = '#1a1a2e';
       const vid = document.createElement('video');
       vid.muted = true; vid.autoplay = true; vid.loop = true;
-      vid.playsInline = true; vid.preload = 'auto';
+      vid.playsInline = true;
+      // En móvil pedimos menos datos por adelantado para cuidar el consumo
+      vid.preload = isMobile ? 'metadata' : 'auto';
       vid.src = VIDEO_SETS[colorOrIdx][0];
       el.appendChild(vid);
       vid.play().catch(() => {
@@ -159,7 +200,9 @@ function buildGrid() {
       el.style.backgroundColor = colorMap[colorOrIdx] || colorOrIdx;
     }
 
-    // Eventos de hover
+    // Eventos de hover (en touch, mouseenter/mouseleave normalmente no
+    // disparan salvo un primer tap "fantasma"; lo dejamos igual porque
+    // no molesta y el auto‑hover cubre la animación en pantallas táctiles)
     el.addEventListener('mouseenter', () => {
       hoveredCell = cellObj;
       cellObj.hoverDirection = pickRandomDirection(cellObj);
@@ -243,7 +286,8 @@ function startStaggeredRotation() {
 }
 
 function scheduleNextRotation(i) {
-  const base = BASE_INTERVALS[i % BASE_INTERVALS.length];
+  const intervals = isMobile ? BASE_INTERVALS_MOBILE : BASE_INTERVALS;
+  const base = intervals[i % intervals.length];
   const delay = Math.max(2500, base + (Math.random() * JITTER * 2 - JITTER));
   videoTimers[i] = setTimeout(() => {
     rotateVideo(i);
@@ -271,11 +315,11 @@ function baseTrackSizes() {
   const outer = CFG.gap * 2;
   const W = window.innerWidth - outer * 2;
   const H = window.innerHeight - outer * 2;
-  const gapX = (10 - 1) * CFG.gap;
-  const gapY = (5 - 1) * CFG.gap;
+  const gapX = (GRID.cols - 1) * CFG.gap;
+  const gapY = (GRID.rows - 1) * CFG.gap;
   return {
-    colBase: (W - gapX) / 10,
-    rowBase: (H - gapY) / 5,
+    colBase: (W - gapX) / GRID.cols,
+    rowBase: (H - gapY) / GRID.rows,
   };
 }
 
@@ -283,7 +327,7 @@ function candidateDirections(cell) {
   const { r, rs } = cell;
   const dirs = [];
   if (r - 1 >= 0) dirs.push('up');
-  if (r + rs < 5) dirs.push('down');
+  if (r + rs < GRID.rows) dirs.push('down');
   return dirs;
 }
 
@@ -409,7 +453,9 @@ function shuffle(arr) {
 
 function scheduleAutoHover() {
   // ── AJUSTA AQUÍ LA ESPERA ENTRE AUTO‑HOVERS (ms) ──
-  const delay = 2800 + Math.random() * 1000; // 2‑3s
+  // En móvil espaciamos un poco más las animaciones para que se sientan
+  // menos frenéticas en una pantalla chica y para cuidar batería.
+  const delay = (isMobile ? 3400 : 2800) + Math.random() * 1000;
   autoHoverTimer = setTimeout(() => {
     triggerRandomAutoHover();
     scheduleAutoHover();
@@ -420,7 +466,9 @@ function triggerRandomAutoHover() {
   const activeNow = new Set(autoHovered);
   if (hoveredCell) activeNow.add(hoveredCell);
 
-  const numToPick = 2 + Math.floor(Math.random() * 2);
+  // En móvil animamos una celda a la vez: con columnas angostas, mover dos
+  // franjas completas a la vez se siente caótico.
+  const numToPick = isMobile ? 1 : (2 + Math.floor(Math.random() * 2));
   const candidates = shuffle(
     cells.filter(c => !activeNow.has(c) && candidateDirections(c).length)
   );
@@ -474,10 +522,21 @@ function init() {
     setTimeout(buildGrid, 1000);
   }
 
+  // Reconstruimos el grid al cruzar el breakpoint móvil/escritorio (p.ej.
+  // al girar el teléfono o redimensionar), no sólo al reajustar tamaños.
   let rt;
+  let lastIsMobile = window.innerWidth < MOBILE_BREAKPOINT;
   window.addEventListener('resize', () => {
     clearTimeout(rt);
-    rt = setTimeout(buildGrid, 250);
+    rt = setTimeout(() => {
+      const nowMobile = window.innerWidth < MOBILE_BREAKPOINT;
+      if (nowMobile !== lastIsMobile) {
+        lastIsMobile = nowMobile;
+        buildGrid(); // el layout cambió de forma (grid distinto), reconstruimos todo
+      } else {
+        applyLayout(); // sólo cambió el tamaño de ventana, reacomodamos
+      }
+    }, 250);
   });
 
   // CTA click reveal

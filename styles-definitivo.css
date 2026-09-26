@@ -34,37 +34,34 @@ body {
   height: 100% !important;
   overflow: hidden !important;
   font-family: var(--font-body);
-  background: var(--bg-bone);
+  background: var(--bg-bone) !important;
   color: var(--text-dark);
 }
+
+/* 👇 FIX MÓVIL: en celular Wix usa su propio viewport (más angosto que la
+   pantalla real), así que 100vw / 100dvh NO coinciden con lo que se ve.
+   El JS mide el área visible real y la publica en estas variables:
+   --app-w / --app-h (tamaño) y --app-x / --app-y (posición).
+   Mientras el JS no corre, se usan 100vw / 100dvh como respaldo. */
 
 /* ========== BACKGROUND GRID ==========
    👇 FIX: Wix envuelve el contenido inyectado en contenedores propios
    que suelen tener transform/filter/will-change aplicado. Eso hace que
    "position: fixed" deje de calcularse respecto a la pantalla y pase a
-   calcularse respecto a ese contenedor (que puede tener tamaño 0 o
-   estar recortado) — el fondo queda "enterrado" en vez de cubrir todo.
-
-   Solución: usar position: absolute + tamaño en unidades de viewport
-   (vw / dvh), que SIEMPRE se calculan contra la pantalla real sin
-   importar qué ancestro tenga transform. Y top/left:0 con !important
-   para anclarlo arriba a la izquierda pase lo que pase. */
-/* 👇 FIX: Wix inserta esta capa automáticamente en el DOM de toda página,
-   DESPUÉS de que tu código carga. Nos tapaba el fondo y nos robaba los
-   clics/hover. pointer-events:none deja pasar el mouse "a través" de
-   ella, y con eso alcanza (no hace falta z-index para el tapado visual,
-   porque colorUnderlay pinta detrás del contenido normal de la página,
-   pero SÍ hacía falta esto para que no bloquee el cursor). */
+   calcularse respecto a ese contenedor. Solución: position: absolute +
+   tamaño en unidades de viewport (vw / dvh). */
+/* 👇 FIX: Wix inserta esta capa automáticamente y nos robaba los
+   clics/hover. pointer-events:none deja pasar el mouse a través. */
 [data-testid="colorUnderlay"] {
   pointer-events: none !important;
 }
 
 #bgGrid {
   position: absolute !important;
-  top: calc(var(--gap) * 2) !important;
-  left: calc(var(--gap) * 2) !important;
-  width: calc(100vw - var(--gap) * 4) !important;
-  height: calc(100dvh - var(--gap) * 4) !important;
+  top: calc(var(--app-y, 0px) + var(--gap) * 2) !important;
+  left: calc(var(--app-x, 0px) + var(--gap) * 2) !important;
+  width: calc(var(--app-w, 100vw) - var(--gap) * 4) !important;
+  height: calc(var(--app-h, 100dvh) - var(--gap) * 4) !important;
   box-sizing: border-box;
   z-index: 100002 !important;
 }
@@ -111,10 +108,10 @@ body {
    👇 FIX: mismo criterio que #bgGrid, absolute + vw/dvh en vez de fixed + inset */
 #stage {
   position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100dvh !important;
+  top: var(--app-y, 0px) !important;
+  left: var(--app-x, 0px) !important;
+  width: var(--app-w, 100vw) !important;
+  height: var(--app-h, 100dvh) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,7 +266,6 @@ body {
     opacity: 0;
     transform: translateY(12px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -277,77 +273,100 @@ body {
 }
 
 /* ========== RESPONSIVE — TABLET / MÓVIL GRANDE (≤768px) ==========
-   Coincide con MOBILE_BREAKPOINT en el JS: por debajo de este ancho el
-   script arma un grid de 4 columnas apiladas en vertical en vez del de
-   10×5 pensado para pantallas anchas, así que acompañamos con un margen
-   exterior más chico y una tarjeta que respire mejor en formato angosto. */
+   Coincide con MOBILE_BREAKPOINT en el JS. */
 @media (max-width: 768px) {
   :root {
-    --gap: 8px;
+    --gap: 6px;
   }
 
   #stage {
-    padding: 16px;
-    /* Si el contenido de la tarjeta llega a ser más alto que la pantalla
-       (fuente del sistema agrandada, teclado, etc.) permitimos scroll en
-       vez de recortarlo. */
+    padding: 22px;
     overflow-y: auto;
   }
 
+  /* Tarjeta más compacta y un poco más opaca para que el texto se lea
+     bien sobre los vídeos y colores de fondo. */
   .card {
-    padding: 34px 24px 30px;
+    padding: 26px 22px 22px;
     border-radius: 18px;
-    max-width: 400px;
+    max-width: 360px;
+    background: rgba(255, 255, 255, 0.8);
+    box-shadow:
+      0 4px 18px rgba(0, 0, 0, 0.08),
+      0 18px 50px rgba(0, 0, 0, 0.14);
   }
 
   .card .logo {
-    width: 130px;
-    margin-bottom: 16px;
+    width: 118px;
+    margin-bottom: 14px;
   }
 
   .card .subtitle {
     font-size: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .card h1 {
-    font-size: 27px;
+    font-size: 26px;
     line-height: 1.05;
-    margin-bottom: 16px;
+    letter-spacing: -0.4px;
+    margin-bottom: 12px;
   }
 
   .card .description {
     font-size: 13px;
-    line-height: 1.6;
-    margin-bottom: 22px;
+    line-height: 1.55;
+    margin-bottom: 14px;
   }
 
   .card .cta {
-    font-size: 10.5px;
-    padding: 10px 2px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 2px;
+    gap: 8px;
+    text-align: left;
   }
 
   .card .cta .icon {
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
+  /* El texto extra ya no reserva espacio vacío: se despliega al tocar. */
+  .card .cta-detail {
+    min-height: 0;
+    max-height: 0;
+    margin-top: 0;
+    overflow: hidden;
+    transition: opacity 0.4s ease, max-height 0.4s ease, margin-top 0.4s ease;
+  }
+
+  .card .cta-detail.show {
+    max-height: 120px;
+    margin-top: 6px;
   }
 
   .card .coming-soon {
-    margin-top: 24px;
-    font-size: 11px;
+    margin-top: 16px;
+    font-size: 10.5px;
     letter-spacing: 3px;
   }
 }
 
 /* ========== RESPONSIVE — MÓVIL CHICO (≤380px, p.ej. iPhone SE) ========== */
 @media (max-width: 380px) {
+  #stage {
+    padding: 18px;
+  }
+
   .card {
-    padding: 28px 18px 24px;
+    padding: 22px 16px 18px;
   }
 
   .card .logo {
-    width: 110px;
+    width: 106px;
   }
 
   .card h1 {
@@ -360,13 +379,10 @@ body {
 
   .card .cta-detail {
     font-size: 11px;
-    min-height: 0;
   }
 }
 
-/* ========== RESPONSIVE — MÓVIL EN HORIZONTAL (bajo, ancho) ==========
-   En landscape la altura disponible es chica; achicamos verticalmente
-   la tarjeta y dejamos que el fondo siga cubriendo todo el viewport. */
+/* ========== RESPONSIVE — MÓVIL EN HORIZONTAL (bajo, ancho) ========== */
 @media (max-width: 900px) and (max-height: 480px) and (orientation: landscape) {
   .card {
     padding: 20px 28px;
@@ -398,7 +414,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {

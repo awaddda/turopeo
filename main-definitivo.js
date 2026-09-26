@@ -1,17 +1,20 @@
+(function () {
+  if (window.__turopeoLoaded) return;
+  window.__turopeoLoaded = true;
+
 /* ================================================================
-   TURopeo Interactive Drawer Grid
-   ================================================================ */
+   Cuadrícula de cajones interactivos TURopeo
+   ================================================================= */
 
 /* ─── CONFIGURACIÓN DE VELOCIDADES ───
-   Puedes ajustar estos valores para cambiar la rapidez:
    - Transiciones de celdas: modifica --transition-push en CSS.
-   - Fundido de vídeos: modifica la transición opacity en .cell video.
-   - Espera entre auto‑hovers: 2000‑3000 ms (más abajo)
-   - Duración del auto‑hover: 1800‑2500 ms (más abajo)
+   - Fundido de vídeos: modifica la transición de opacidad en .cell video.
+   - Espera entre auto‑hovers: scheduleAutoHover (más abajo)
+   - Duración del auto‑hover: triggerRandomAutoHover (más abajo)
    - Rotación de vídeos: BASE_INTERVALS (más abajo)
 ─────────────────────────────────────── */
 
-/* Video rotation sets */
+/* Conjuntos de rotación de vídeo */
 const VIDEO_SETS = [
   ['https://video.wixstatic.com/video/d1ff0b_966b8e6c8ed345b2a97f4b2aa8c20bb5/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_020fed668c0d40e49fdfd4c87ea077e4/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_82342e131dd54081a678e2e954f726ab/1080p/mp4/file.mp4'],
   ['https://video.wixstatic.com/video/d1ff0b_e784a2dda70f41959d37a98aedb9ce82/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_18dc1595c8ca451aa2ff609a854e40d1/1080p/mp4/file.mp4', 'https://video.wixstatic.com/video/d1ff0b_5204f0e66ce9409da0c08061c0d32036/1080p/mp4/file.mp4'],
@@ -26,101 +29,123 @@ const BASE_INTERVALS_MOBILE = [8000, 9000, 7000, 6000];
 const JITTER = 500;
 
 /* ─── MAPA DE COLORES (usando variables CSS) ─── */
-const COLOR_NAMES = ['coral', 'green', 'purple', 'orange', 'yellow', 'green-dark'];
+const COLOR_NAMES = ['coral', 'verde', 'morado', 'naranja', 'amarillo', 'verde oscuro'];
 const colorMap = {
   coral: 'var(--coral)',
-  green: 'var(--green)',
-  purple: 'var(--purple)',
-  orange: 'var(--orange)',
-  yellow: 'var(--yellow)',
-  'green-dark': 'var(--green-dark)'
+  verde: 'var(--green)',
+  morado: 'var(--purple)',
+  naranja: 'var(--orange)',
+  amarillo: 'var(--yellow)',
+  'verde oscuro': 'var(--green-dark)'
 };
 
-/* Punto de corte para el layout móvil */
+/* Punto de corte para el diseño móvil */
 const MOBILE_BREAKPOINT = 768;
 
 /* Parámetros del grid (se ajustan para móvil) */
 const CFG = {
-  gap: 14,          // separación entre celdas (px)
-  growFrac: 0.42,   // fracción de crecimiento al hacer hover
-  growCap: 90,      // tope de crecimiento (px)
-  minFrac: 0.32,    // fracción mínima de una celda vecina al encogerse
+  gap: 14,        // separación entre celdas (px)
+  growFrac: 0.42, // fracción de crecimiento al hacer hover
+  growCap: 90,    // tope de crecimiento (px)
+  minFrac: 0.32,  // fracción mínima de una celda vecina al encogerse
 };
 
 /* ================================================================
    DEFINICIÓN DEL GRID — ESCRITORIO (10 columnas × 5 filas)
-   Cada entrada: [col, row, tipo, color/índice, colSpan, rowSpan]
-   - tipo 'v': vídeo, color es el índice del set de vídeos
+   Cada entrada: [col, fila, tipo, color/índice, colSpan, rowSpan]
+   - tipo 'v': vídeo, color es el índice del conjunto de vídeos
    - tipo 'c': bloque sólido, color es el nombre simbólico
-   ================================================================ */
+   ================================================================= */
 const DESKTOP_GRID = { cols: 10, rows: 5 };
 const DEFS = [
   // Vídeos
   [0, 0, 'v', 0, 1.5, 3],
   [2.25, 1, 'v', 1, 1.75, 2.75],
-  // Gap aurora–nórdico
-  [1.5, 0, 'c', 'orange', 0.75, 1.5],
-  [1.5, 1.5, 'c', 'purple', 0.75, 1.75],
+  // Brecha aurora–nórdico
+  [1.5, 0, 'c', 'naranja', 0.75, 1.5],
+  [1.5, 1.5, 'c', 'morado', 0.75, 1.75],
   [1.5, 3.25, 'c', 'coral', 0.75, 1.75],
-  // Aurora band leftover
-  [0, 3, 'c', 'green-dark', 0.75, 2],
-  [0.75, 3, 'c', 'yellow', 0.75, 2],
-  // Nordic band leftover
-  [2.25, 0, 'c', 'yellow', 0.875, 1],
-  [3.125, 0, 'c', 'green', 0.875, 1],
-  [2.25, 3.75, 'c', 'orange', 0.875, 1.25],
-  [3.125, 3.75, 'c', 'green', 0.875, 1.25],
+  // Restos de la banda Aurora
+  [0, 3, 'c', 'verde oscuro', 0.75, 2],
+  [0.75, 3, 'c', 'amarillo', 0.75, 2],
+  // Restos de la banda nórdica
+  [2.25, 0, 'c', 'amarillo', 0.875, 1],
+  [3.125, 0, 'c', 'verde', 0.875, 1],
+  [2.25, 3.75, 'c', 'naranja', 0.875, 1.25],
+  [3.125, 3.75, 'c', 'verde', 0.875, 1.25],
   // Centro
   [4, 0, 'c', 'coral', 0.95, 1.5],
-  [4, 1.5, 'c', 'purple', 0.95, 1.75],
-  [4, 3.25, 'c', 'yellow', 0.95, 1.75],
-  [4.95, 0, 'c', 'orange', 1.15, 1.25],
-  [4.95, 1.25, 'c', 'green', 1.15, 1.75],
+  [4, 1.5, 'c', 'morado', 0.95, 1.75],
+  [4, 3.25, 'c', 'amarillo', 0.95, 1.75],
+  [4.95, 0, 'c', 'naranja', 1.15, 1.25],
+  [4.95, 1.25, 'c', 'verde', 1.15, 1.75],
   [4.95, 3, 'c', 'coral', 1.15, 2],
-  // Video Shanghai (movido 0.2 a la izquierda)
+  // Vídeo Shanghái
   [6.1, 0, 'v', 2, 1.7, 3.45],
-  // Asia band leftover
-  [6.1, 3.45, 'c', 'orange', 0.75, 1.55],
-  [6.85, 3.45, 'c', 'purple', 0.95, 1.55],
-  // Gap asia–áfrica (ensanchado)
-  [7.8, 0, 'c', 'yellow', 0.75, 2.25],
-  [7.8, 2.25, 'c', 'green', 0.75, 2.75],
-  // Video África (ajustado para no invadir el borde)
+  // Restos de la banda asiática
+  [6.1, 3.45, 'c', 'naranja', 0.75, 1.55],
+  [6.85, 3.45, 'c', 'morado', 0.95, 1.55],
+  // Brecha asia–áfrica
+  [7.8, 0, 'c', 'amarillo', 0.75, 2.25],
+  [7.8, 2.25, 'c', 'verde', 0.75, 2.75],
+  // Vídeo África
   [8.55, 1.8, 'v', 3, 1.45, 3.2],
-  // Africa band leftover
+  // Restos de la banda africana
   [8.55, 0, 'c', 'coral', 0.725, 1.8],
-  [9.275, 0, 'c', 'orange', 0.725, 1.8],
+  [9.275, 0, 'c', 'naranja', 0.725, 1.8],
 ];
 
 /* ================================================================
-   DEFINICIÓN DEL GRID — MÓVIL (4 columnas × 16 filas)
-   Layout apilado en vertical: cada vídeo ocupa el ancho completo,
-   con una franja de dos bloques de color entre cada uno. Pensado
-   para pantallas altas y angostas (retrato), evitando celdas
-   diminutas o ilegibles como pasaría si sólo achicáramos el grid
-   de escritorio.
-   ================================================================ */
-const MOBILE_GRID = { cols: 4, rows: 16 };
+   DEFINICIÓN DEL GRID — MÓVIL (4 columnas × 10 filas)
+   Mosaico como el de escritorio pero en vertical: dos vídeos arriba y
+   dos abajo (las zonas que la tarjeta deja a la vista) y bloques de
+   color en el centro, que se ven difuminados a través de la tarjeta.
+   ================================================================= */
+const MOBILE_GRID = { cols: 4, rows: 10 };
 const MOBILE_DEFS = [
-  // Aurora
-  [0, 0, 'v', 0, 4, 3],
-  [0, 3, 'c', 'orange', 2, 1],
-  [2, 3, 'c', 'purple', 2, 1],
-  // Nórdico
-  [0, 4, 'v', 1, 4, 3],
-  [0, 7, 'c', 'yellow', 2, 1],
-  [2, 7, 'c', 'coral', 2, 1],
-  // Asia (Shanghai)
-  [0, 8, 'v', 2, 4, 3],
-  [0, 11, 'c', 'green', 2, 1],
-  [2, 11, 'c', 'orange', 2, 1],
-  // África
-  [0, 12, 'v', 3, 4, 3],
-  [0, 15, 'c', 'purple', 2, 1],
-  [2, 15, 'c', 'green-dark', 2, 1],
+  // Arriba: Aurora grande + Nórdico angosto
+  [0, 0, 'v', 0, 2.5, 3.5],
+  [2.5, 0, 'c', 'naranja', 1.5, 1.25],
+  [2.5, 1.25, 'v', 1, 1.5, 2.25],
+  // Centro (detrás de la tarjeta)
+  [0, 3.5, 'c', 'amarillo', 1.25, 3],
+  [1.25, 3.5, 'c', 'coral', 1.25, 1.5],
+  [1.25, 5, 'c', 'verde', 1.25, 1.5],
+  [2.5, 3.5, 'c', 'morado', 1.5, 1.75],
+  [2.5, 5.25, 'c', 'naranja', 1.5, 1.25],
+  // Abajo: Shanghái angosto + África grande
+  [0, 6.5, 'v', 2, 1.5, 2.25],
+  [0, 8.75, 'c', 'verde oscuro', 1.5, 1.25],
+  [1.5, 6.5, 'c', 'coral', 2.5, 1],
+  [1.5, 7.5, 'v', 3, 2.5, 2.5],
 ];
 
-/* ---- State ---- */
+/* ================================================================
+   VIEWPORT REAL
+   En el celular, Wix usa un viewport propio que no coincide con la
+   pantalla (por eso antes la tarjeta quedaba corrida y el grid se
+   salía por la derecha). Medimos el área visible real y la pasamos
+   al CSS como variables, así todo usa la misma medida.
+   ================================================================= */
+function getViewport() {
+  const vv = window.visualViewport;
+  if (vv && vv.width > 0 && vv.height > 0) {
+    return { w: vv.width, h: vv.height, x: vv.pageLeft || 0, y: vv.pageTop || 0 };
+  }
+  return { w: window.innerWidth, h: window.innerHeight, x: 0, y: 0 };
+}
+
+function syncViewportVars() {
+  const v = getViewport();
+  const s = document.documentElement.style;
+  s.setProperty('--app-w', v.w + 'px');
+  s.setProperty('--app-h', v.h + 'px');
+  s.setProperty('--app-x', v.x + 'px');
+  s.setProperty('--app-y', v.y + 'px');
+  return v;
+}
+
+/* ---- Estado ---- */
 let cells = [];
 let videoEls = [], videoCounters = [], videoSetIndex = [], videoTimers = [];
 let hoveredCell = null;
@@ -131,14 +156,11 @@ let isMobile = false;
 let GRID = DESKTOP_GRID;
 
 /* ================================================================
-   BUILD
-   ================================================================ */
+   CONSTRUIR
+   ================================================================= */
 function buildGrid() {
-  // 👇 FIX: buscamos #bgGrid recién acá, cada vez que se llama a buildGrid(),
-  // en vez de guardarlo una sola vez en una variable global al cargar el script.
-  // Si el script se ejecuta antes de que el div exista en el DOM (algo común
-  // cuando Wix inyecta el código dinámicamente), esto evita que todo el script
-  // se rompa silenciosamente en "grid.innerHTML = ''".
+  // Buscamos #bgGrid cada vez que se llama a buildGrid(), por si el
+  // script corre antes de que el div exista (común cuando Wix inyecta código).
   const grid = document.getElementById('bgGrid');
   if (!grid) {
     console.error('[TURopeo] No se encontró #bgGrid en el DOM. Reintentando...');
@@ -160,8 +182,8 @@ function buildGrid() {
   videoSetIndex = [];
   hoveredCell = null;
 
-  // Ajustar parámetros y layout para móvil
-  isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+  // Ajustar parámetros y diseño para móvil
+  isMobile = syncViewportVars().w < MOBILE_BREAKPOINT;
   GRID = isMobile ? MOBILE_GRID : DESKTOP_GRID;
   const activeDefs = isMobile ? MOBILE_DEFS : DEFS;
 
@@ -200,9 +222,7 @@ function buildGrid() {
       el.style.backgroundColor = colorMap[colorOrIdx] || colorOrIdx;
     }
 
-    // Eventos de hover (en touch, mouseenter/mouseleave normalmente no
-    // disparan salvo un primer tap "fantasma"; lo dejamos igual porque
-    // no molesta y el auto‑hover cubre la animación en pantallas táctiles)
+    // Eventos de hover (en táctil el auto‑hover cubre la animación)
     el.addEventListener('mouseenter', () => {
       hoveredCell = cellObj;
       cellObj.hoverDirection = pickRandomDirection(cellObj);
@@ -229,19 +249,17 @@ function buildGrid() {
 
 /* ================================================================
    VERIFICACIÓN DE COLORES ADYACENTES
-   ================================================================ */
+   ================================================================= */
 function ensureNoAdjacentSameColor() {
-  // Solo nos interesan las celdas de tipo sólido (con colorName)
   const solidCells = cells.filter(c => c.colorName);
   let changed = true;
-  // Iteramos hasta que no haya más cambios
-  while (changed) {
+  let guard = 0; // evita un bucle infinito si no hubiera solución
+  while (changed && guard++ < 50) {
     changed = false;
     for (const cell of solidCells) {
       const neighbors = findTouchingNeighborsAllDirections(cell);
       const neighborColors = new Set(neighbors.map(n => n.colorName).filter(Boolean));
       if (neighborColors.has(cell.colorName)) {
-        // Buscar un color que no esté entre los vecinos
         const available = COLOR_NAMES.filter(c => !neighborColors.has(c));
         if (available.length) {
           const newColor = available[Math.floor(Math.random() * available.length)];
@@ -256,14 +274,11 @@ function ensureNoAdjacentSameColor() {
 
 function findTouchingNeighborsAllDirections(cell) {
   const result = [];
+  const eps = 0.001;
   for (const other of cells) {
     if (other === cell) continue;
-    // Verificar si comparten borde (arriba, abajo, izquierda, derecha)
-    const eps = 0.001;
-    // Para que sean adyacentes, deben estar alineados en una dimensión y tocarse en la otra
     const xOverlap = other.c < cell.c + cell.cs + eps && other.c + other.cs > cell.c - eps;
     const yOverlap = other.r < cell.r + cell.rs + eps && other.r + other.rs > cell.r - eps;
-    // Si no hay solapamiento en alguna dimensión, pueden ser adyacentes si están justo al lado
     const touchesLeft = other.c + other.cs <= cell.c + eps && other.c + other.cs >= cell.c - eps;
     const touchesRight = other.c >= cell.c + cell.cs - eps && other.c <= cell.c + cell.cs + eps;
     const touchesTop = other.r + other.rs <= cell.r + eps && other.r + other.rs >= cell.r - eps;
@@ -279,8 +294,8 @@ function findTouchingNeighborsAllDirections(cell) {
 }
 
 /* ================================================================
-   ROTACIÓN DE VÍDEOS (con fundido más lento)
-   ================================================================ */
+   ROTACIÓN DE VÍDEOS
+   ================================================================= */
 function startStaggeredRotation() {
   videoEls.forEach((vid, i) => scheduleNextRotation(i));
 }
@@ -309,12 +324,20 @@ function rotateVideo(i) {
 }
 
 /* ================================================================
-   LAYOUT (crecimiento en una dirección)
-   ================================================================ */
+   DISEÑO (crecimiento en una dirección)
+   ================================================================= */
 function baseTrackSizes() {
-  const outer = CFG.gap * 2;
-  const W = window.innerWidth - outer * 2;
-  const H = window.innerHeight - outer * 2;
+  let W, H;
+  const grid = document.getElementById('bgGrid');
+  if (isMobile && grid && grid.clientWidth > 0) {
+    // En móvil medimos el contenedor real: márgenes parejos a ambos lados
+    W = grid.clientWidth;
+    H = grid.clientHeight;
+  } else {
+    const outer = CFG.gap * 2;
+    W = window.innerWidth - outer * 2;
+    H = window.innerHeight - outer * 2;
+  }
   const gapX = (GRID.cols - 1) * CFG.gap;
   const gapY = (GRID.rows - 1) * CFG.gap;
   return {
@@ -328,7 +351,14 @@ function candidateDirections(cell) {
   const dirs = [];
   if (r - 1 >= 0) dirs.push('up');
   if (r + rs < GRID.rows) dirs.push('down');
-  return dirs;
+  if (!isMobile) return dirs;
+  // En móvil sólo crecemos hacia vecinos que queden "debajo" de la celda
+  // por completo, así nunca se abren huecos al empujar.
+  const eps = 0.001;
+  return dirs.filter(d => {
+    const n = findTouchingNeighbors(cell, d);
+    return n.length && n.every(o => o.c >= cell.c - eps && o.c + o.cs <= cell.c + cell.cs + eps);
+  });
 }
 
 function pickRandomDirection(cell) {
@@ -441,8 +471,8 @@ function applyLayout() {
 }
 
 /* ================================================================
-   AUTO‑HOVER (más lento)
-   ================================================================ */
+   AUTO-HOVER
+   ================================================================= */
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -453,8 +483,6 @@ function shuffle(arr) {
 
 function scheduleAutoHover() {
   // ── AJUSTA AQUÍ LA ESPERA ENTRE AUTO‑HOVERS (ms) ──
-  // En móvil espaciamos un poco más las animaciones para que se sientan
-  // menos frenéticas en una pantalla chica y para cuidar batería.
   const delay = (isMobile ? 3400 : 2800) + Math.random() * 1000;
   autoHoverTimer = setTimeout(() => {
     triggerRandomAutoHover();
@@ -466,8 +494,7 @@ function triggerRandomAutoHover() {
   const activeNow = new Set(autoHovered);
   if (hoveredCell) activeNow.add(hoveredCell);
 
-  // En móvil animamos una celda a la vez: con columnas angostas, mover dos
-  // franjas completas a la vez se siente caótico.
+  // En móvil animamos una celda a la vez
   const numToPick = isMobile ? 1 : (2 + Math.floor(Math.random() * 2));
   const candidates = shuffle(
     cells.filter(c => !activeNow.has(c) && candidateDirections(c).length)
@@ -499,14 +526,43 @@ function triggerRandomAutoHover() {
 }
 
 /* ================================================================
-   INIT
-   ================================================================ */
+   CENTRADO FORZADO DE LA TARJETA (sólo móvil)
+   Por si Wix corre la página, medimos dónde quedó la tarjeta y la
+   desplazamos hasta que su centro coincida con el centro de lo que
+   realmente se ve en la pantalla.
+   ================================================================= */
+function centerCard() {
+  const stage = document.getElementById('stage');
+  const card = stage && stage.querySelector('.card');
+  if (!stage || !card) return;
+  stage.style.translate = '';
+  if (!isMobile) return;
+
+  const v = getViewport();
+  const vv = window.visualViewport;
+  const offX = vv ? vv.offsetLeft : 0;
+  const offY = vv ? vv.offsetTop : 0;
+  const s = stage.getBoundingClientRect();
+
+  // Centro de la tarjeta (sin contar su animación de entrada)
+  const cx = s.left - offX + card.offsetLeft + card.offsetWidth / 2;
+  const cy = s.top - offY + card.offsetTop + card.offsetHeight / 2;
+
+  const dx = v.w / 2 - cx;
+  // Si la tarjeta es más alta que la pantalla no la movemos en vertical
+  const dy = card.offsetHeight < v.h ? v.h / 2 - cy : 0;
+
+  if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+    stage.style.translate = `${Math.round(dx)}px ${Math.round(dy)}px`;
+  }
+}
+
+/* ================================================================
+   INICIO
+   ================================================================= */
 function init() {
-  // 👇 FIX: Wix suele envolver el contenido inyectado en contenedores propios
-  // que tienen transform/filter/will-change aplicado. Eso rompe position:fixed
-  // (el elemento queda "encerrado" dentro de ese contenedor en vez de cubrir
-  // toda la pantalla). Solución: mover #bgGrid y #stage directo a <body>,
-  // al nivel más alto del DOM, para evitar cualquier ancestro problemático.
+  // Mover #bgGrid y #stage directo a <body> para evitar ancestros de Wix
+  // con transform/filter que rompen el posicionamiento.
   const bg = document.getElementById('bgGrid');
   const stage = document.getElementById('stage');
   if (bg && bg.parentElement !== document.body) document.body.appendChild(bg);
@@ -514,32 +570,37 @@ function init() {
 
   buildGrid();
 
-  // 👇 FIX: reintento de seguridad. Si en Wix el div #bgGrid todavía no
-  // estaba en el DOM cuando corrió init(), reintentamos una vez a los 300ms
-  // y otra vez a los 1000ms por si el contenedor tarda más en montarse.
+  // Reintento de seguridad por si #bgGrid tarda en montarse
   if (!document.getElementById('bgGrid')) {
     setTimeout(buildGrid, 300);
     setTimeout(buildGrid, 1000);
   }
 
-  // Reconstruimos el grid al cruzar el breakpoint móvil/escritorio (p.ej.
-  // al girar el teléfono o redimensionar), no sólo al reajustar tamaños.
+  // Reconstruimos el grid al cruzar el breakpoint móvil/escritorio
   let rt;
-  let lastIsMobile = window.innerWidth < MOBILE_BREAKPOINT;
-  window.addEventListener('resize', () => {
+  let lastIsMobile = getViewport().w < MOBILE_BREAKPOINT;
+  const onResize = () => {
     clearTimeout(rt);
     rt = setTimeout(() => {
-      const nowMobile = window.innerWidth < MOBILE_BREAKPOINT;
+      const nowMobile = syncViewportVars().w < MOBILE_BREAKPOINT;
       if (nowMobile !== lastIsMobile) {
         lastIsMobile = nowMobile;
-        buildGrid(); // el layout cambió de forma (grid distinto), reconstruimos todo
+        buildGrid();   // cambió la forma del grid, reconstruimos todo
       } else {
-        applyLayout(); // sólo cambió el tamaño de ventana, reacomodamos
+        applyLayout(); // sólo cambió el tamaño, reacomodamos
       }
-    }, 250);
-  });
+      centerCard();
+    }, 150);
+  };
+  centerCard();
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+  // Wix a veces ajusta el viewport después de cargar: re-medimos un par de veces
+  setTimeout(onResize, 400);
+  setTimeout(onResize, 1200);
 
-  // CTA click reveal
+  // Mostrar detalle al hacer clic en el CTA
   const ctaLink = document.getElementById('ctaLink');
   const ctaDetail = document.getElementById('ctaDetail');
   if (ctaLink && ctaDetail) {
@@ -554,3 +615,4 @@ function init() {
 document.readyState === 'loading'
   ? document.addEventListener('DOMContentLoaded', init)
   : init();
+})();
